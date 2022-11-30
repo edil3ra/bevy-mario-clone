@@ -3,7 +3,7 @@ pub type Idx2 = (i32, i32);
 #[derive(Debug, Default)]
 pub struct Level {
     pub current: usize,
-    pub grid: Option<LevelFile>
+    pub grid: Option<LevelFile>,
 }
 
 #[derive(Debug, Default)]
