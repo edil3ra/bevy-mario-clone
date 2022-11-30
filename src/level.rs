@@ -1,4 +1,4 @@
-pub type Idx2 = (i32, i32);
+pub type Idx2 = (usize, usize);
 
 #[derive(Debug, Default)]
 pub struct Level {
@@ -19,13 +19,14 @@ impl LevelFile {
             .map(|s| s.chars().collect())
             .filter(|s: &Vec<char>| !s.is_empty())
             .collect();
+        dbg!(&grid[0].len(), &grid.len());
         LevelFile {
-            dims: (grid[0].len() as i32 - 1, grid.len() as i32),
+            dims: (grid[0].len(), grid.len()),
             grid,
         }
     }
 
     pub fn get(&self, pos: Idx2) -> char {
-        self.grid[(self.dims.1 - 1 - pos.1) as usize][pos.0 as usize]
+        self.grid[(self.dims.1 - 1 - pos.1)][pos.0]
     }
 }
