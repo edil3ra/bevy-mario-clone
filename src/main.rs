@@ -14,15 +14,79 @@ const WINDOW_HEIGHT: f32 = 1080.0;
 struct Index(usize, usize);
 #[derive(Component)]
 struct Name(String);
+#[derive(Component)]
+struct Player;
 
 #[derive(Debug, Resource)]
 struct TilesHandle(Handle<TextureAtlas>);
+
+#[derive(Debug, Resource)]
+struct SpritesHandle(Handle<TextureAtlas>);
 
 #[derive(Debug, Resource, Default)]
 struct Game {
     level: level::Level,
     map_to_index: HashMap<char, usize>,
     is_fullscreen: bool,
+}
+const TS: f32 = 16.0;
+const TM: f32 = 24.0;
+const TB: f32 = 32.0;
+
+static SPRITES_DIM: &[(f32, f32, f32, f32)] = &[
+    // 1
+    (0., 0., TS, TS),
+    (16., 0., TS, TS),
+    (32., 0., TS, TS),
+    (48., 0., TS, TS),
+    (64., 0., TS, TS),
+    (80., 0., TS, TS),
+    (96., 0., TS, TS),
+    (112.0, 0., TS, TS),
+    (128.0, 0., TS, TS),
+    (144.0, 0., TS, TS),
+    (160.0, 0., TS, TS),
+    (176.0, 0., TS, TS),
+    (192.0, 0., TS, TM),
+    (208.0, 0., TS, TM),
+    (224.0, 0., TS, TM),
+    (240.0, 0., TS, TM),
+    // 2
+    (0., 16., TS, TS),
+    (16., 16., TS, TS),
+    (32., 16., TS, TS),
+    (48., 16., TS, TS),
+    (64., 16., TS, TS),
+    (80., 16., TS, TS),
+    (96., 16., TS, TS),
+    (112.0, 16., TS, TS),
+    (128.0, 16., TB, TS),
+    // (144.0, 16., TS, TS),
+    (160.0, 16., TS, TS),
+    (176.0, 16., TS, TS),
+    //3
+    (0., 32., TS, TS),
+    (16., 32., TS, TS),
+    (32., 32., TS, TS),
+    (48., 32., TS, TS),
+    (64., 32., TS, TS),
+    (80., 32., TS, TS),
+    (96., 32., TS, TS),
+    (112.0, 32., TS, TS),
+    (128.0, 32., TS, TS),
+    (144.0, 32., TS, TS),
+    (160.0, 32., TS, TS),
+    (176.0, 32., TS, TS),
+    (192.0, 32., TS, TM),
+    (208.0, 32., TS, TM),
+    (224.0, 32., TS, TM),
+    (240.0, 32., TS, TM),
+];
+
+enum SpriteTile {
+    BuzzyBeetle1 = 0,
+    BuzzyBeetle2 = 1,
+    BuzzyBeetle3 = 2,
 }
 
 fn main() {
@@ -68,6 +132,7 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
         .add_startup_system_to_stage(StartupStage::Startup, build_map)
+        .add_startup_system_to_stage(StartupStage::Startup, spawn_mario)
         .add_system_to_stage(CoreStage::PreUpdate, toggle_fullscreen)
         .add_system_to_stage(CoreStage::PreUpdate, move_camera)
         .run();
@@ -78,17 +143,38 @@ fn load_assets(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let texture_handle = asset_server.load("textures/tiles.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 15, 13, None, None);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    let sprites_texture_handle = asset_server.load("textures/sprites.png");
+    let mut sprites_texture_atlas =
+        TextureAtlas::new_empty(sprites_texture_handle, Vec2::new(29.0 * 8.0, 29.0 * 8.0));
 
-    commands.insert_resource(TilesHandle(texture_atlas_handle));
+    for sprite_dim in SPRITES_DIM {
+        sprites_texture_atlas.add_texture(Rect::new(
+            sprite_dim.0,
+            sprite_dim.1,
+            sprite_dim.2 + sprite_dim.0,
+            sprite_dim.3 + sprite_dim.1,
+        ));
+    }
+    let sprites_texture_atlas_handle = texture_atlases.add(sprites_texture_atlas.clone());
+    let tiles_texture_handle = asset_server.load("textures/tiles.png");
+    let tiles_texture_atlas = TextureAtlas::from_grid(
+        tiles_texture_handle,
+        Vec2::new(16.0, 16.0),
+        15,
+        13,
+        None,
+        None,
+    );
+    let tiles_texture_atlas_handle = texture_atlases.add(tiles_texture_atlas);
+
+    commands.insert_resource(TilesHandle(tiles_texture_atlas_handle));
+    commands.insert_resource(SpritesHandle(sprites_texture_atlas_handle));
+
     let scale_factor = WINDOW_HEIGHT / TILE_SIZE / TILE_MAX_HEIGHT;
     commands.spawn(Camera2dBundle {
         transform: Transform {
             translation: Vec3::new(-TILE_SIZE / 2.0, -TILE_SIZE / 2.0, 1.0),
-            scale: Vec3::new(1.0 / scale_factor, 1.0 / scale_factor, 1.0),
+            scale: Vec3::new(1.0 / scale_factor, 1.0 / scale_factor, 2.0),
             ..Default::default()
         },
         projection: OrthographicProjection {
@@ -109,7 +195,7 @@ fn build_map(mut commands: Commands, game_resource: Res<Game>, tiles_handle: Res
             commands
                 .spawn(SpriteSheetBundle {
                     texture_atlas: tiles_handle.0.clone(),
-                    transform: Transform::from_xyz((x * 16) as f32, (y * 16) as f32, 1.0),
+                    transform: Transform::from_xyz((x * 16) as f32, (y * 16) as f32, 0.0),
                     sprite: TextureAtlasSprite::new(*index_map),
                     ..default()
                 })
@@ -122,6 +208,22 @@ fn build_map(mut commands: Commands, game_resource: Res<Game>, tiles_handle: Res
             // }
         }
     }
+}
+
+fn spawn_mario(
+    mut commands: Commands,
+    game_resource: Res<Game>,
+    sprites_handle: Res<SpritesHandle>,
+) {
+    commands.spawn((
+        SpriteSheetBundle {
+            texture_atlas: sprites_handle.0.clone(),
+            transform: Transform::from_xyz(32., 32., 1.0),
+            sprite: TextureAtlasSprite::new(4),
+            ..default()
+        },
+        Player,
+    ));
 }
 
 fn toggle_fullscreen(
