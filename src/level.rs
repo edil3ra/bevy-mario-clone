@@ -19,7 +19,6 @@ impl LevelFile {
             .map(|s| s.chars().collect())
             .filter(|s: &Vec<char>| !s.is_empty())
             .collect();
-        dbg!(&grid[0].len(), &grid.len());
         LevelFile {
             dims: (grid[0].len(), grid.len()),
             grid,

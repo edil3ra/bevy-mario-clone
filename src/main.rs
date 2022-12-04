@@ -10,7 +10,6 @@ const TILE_MAX_HEIGHT: f32 = 14.0;
 const WINDOW_WITDH: f32 = 1920.0;
 const WINDOW_HEIGHT: f32 = 1080.0;
 
-
 #[derive(Component)]
 struct Index(usize, usize);
 #[derive(Component)]
@@ -70,6 +69,7 @@ fn main() {
         .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
         .add_startup_system_to_stage(StartupStage::Startup, build_map)
         .add_system_to_stage(CoreStage::PreUpdate, toggle_fullscreen)
+        .add_system_to_stage(CoreStage::PreUpdate, move_camera)
         .run();
 }
 
@@ -88,10 +88,10 @@ fn load_assets(
     commands.spawn(Camera2dBundle {
         transform: Transform {
             translation: Vec3::new(-TILE_SIZE / 2.0, -TILE_SIZE / 2.0, 1.0),
-            scale: Vec3::new(1.0/scale_factor, 1.0/scale_factor, 1.0),
+            scale: Vec3::new(1.0 / scale_factor, 1.0 / scale_factor, 1.0),
             ..Default::default()
         },
-        projection: OrthographicProjection{
+        projection: OrthographicProjection {
             window_origin: WindowOrigin::BottomLeft,
             ..Default::default()
         },
@@ -137,5 +137,35 @@ fn toggle_fullscreen(
             window.set_mode(WindowMode::BorderlessFullscreen);
         }
         game_resource.is_fullscreen = !game_resource.is_fullscreen
+    }
+}
+
+fn move_camera(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut query: Query<&mut Transform, With<Camera2d>>,
+) {
+    let mut transform = query.get_single_mut().unwrap();
+    if keyboard_input.pressed(KeyCode::Left) {
+        transform.translation.x += -10.0;
+    }
+
+    if keyboard_input.pressed(KeyCode::Right) {
+        transform.translation.x += 10.0;
+    }
+
+    if keyboard_input.pressed(KeyCode::Up) {
+        transform.translation.y += 10.0;
+    }
+
+    if keyboard_input.pressed(KeyCode::Down) {
+        transform.translation.y += -10.0;
+    }
+
+    if keyboard_input.pressed(KeyCode::Plus) {
+        transform.scale *= 0.8;
+    }
+
+    if keyboard_input.pressed(KeyCode::Minus) {
+        transform.scale *= 1.2;
     }
 }
