@@ -4,7 +4,7 @@ pub const TILE_SIZE: f32 = 16.0;
 pub const TILE_MAX_HEIGHT: f32 = 14.0;
 pub const WINDOW_WITDH: f32 = 1920.0;
 pub const WINDOW_HEIGHT: f32 = 1080.0;
-
+pub const TIME_STEP: f64 = 1.0/60.0;
 
 
 
