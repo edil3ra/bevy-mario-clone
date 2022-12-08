@@ -29,11 +29,12 @@ struct Game {
     map_to_index: HashMap<char, usize>,
     is_fullscreen: bool,
 }
+const TT: f32 = 8.0;
 const TS: f32 = 16.0;
 const TM: f32 = 24.0;
 const TB: f32 = 32.0;
 
-static SPRITES_DIM: &[(f32, f32, f32, f32)] = &[
+static ENTITIES_DIM: &[(f32, f32, f32, f32)] = &[
     // 1
     (0., 0., TS, TS),
     (16., 0., TS, TS),
@@ -52,41 +53,117 @@ static SPRITES_DIM: &[(f32, f32, f32, f32)] = &[
     (224.0, 0., TS, TM),
     (240.0, 0., TS, TM),
     // 2
-    (0., 16., TS, TS),
-    (16., 16., TS, TS),
-    (32., 16., TS, TS),
-    (48., 16., TS, TS),
-    (64., 16., TS, TS),
-    (80., 16., TS, TS),
-    (96., 16., TS, TS),
-    (112.0, 16., TS, TS),
-    (128.0, 16., TB, TS),
+    (0.,  TS, TS, TS),
+    (16., TS, TS, TS),
+    (32., TS, TS, TS),
+    (48., TS, TS, TS),
+    (64., TS, TS, TS),
+    (80., TS, TS, TS),
+    (96., TS, TS, TS),
+    (112.0, TS, TS, TS),
+    (128.0, TS, TB, TS),
     // (144.0, 16., TS, TS),
-    (160.0, 16., TS, TS),
-    (176.0, 16., TS, TS),
+    (160.0, TS, TS, TS),
+    (176.0, TS, TS, TS),
     //3
-    (0., 32., TS, TS),
-    (16., 32., TS, TS),
-    (32., 32., TS, TS),
-    (48., 32., TS, TS),
-    (64., 32., TS, TS),
-    (80., 32., TS, TS),
-    (96., 32., TS, TS),
-    (112.0, 32., TS, TS),
-    (128.0, 32., TS, TS),
-    (144.0, 32., TS, TS),
-    (160.0, 32., TS, TS),
-    (176.0, 32., TS, TS),
-    (192.0, 32., TS, TM),
-    (208.0, 32., TS, TM),
-    (224.0, 32., TS, TM),
-    (240.0, 32., TS, TM),
+    (0.,  TS * 2.0, TS, TS),
+    (16., TS * 2.0, TS, TS),
+    (32., TS * 2.0, TS, TS),
+    (48., TS * 2.0, TS, TS),
+    (64., TS * 2.0, TS, TS),
+    (80., TS * 2.0, TS, TS),
+    (96., TS * 2.0, TS, TS),
+    (112.0, TS * 2.0, TS, TS),
+    (128.0, TS * 2.0, TS, TS),
+    (144.0, TS * 2.0, TS, TS),
+    (160.0, TS * 2.0, TS, TS),
+    (176.0, TS * 2.0, TS, TS),
+    (192.0, TS * 2.0, TS, TM),
+    (208.0, TS * 2.0, TS, TM),
+    (224.0, TS * 2.0, TS, TM),
+    (240.0, TS * 2.0, TS, TM),
+    //4
+    (0.,  TS * 3.0,   TS, TM),
+    (16., TS * 3.0,   TS, TM),
+    (32., TS * 3.0,   TS, TM),
+    (48., TS * 3.0,   TS, TM),
+    (64., TS * 3.0,   TS, TM),
+    (80., TS * 3.0,   TS, TM),
+    (96., TS * 3.0,   TS, TM),
+    (112.0, TS * 3.0, TS, TM),
+    (128.0, TS * 3.0, TS, TM),
+    (144.0, TS * 3.0, TS, TM),
+    (160.0, TS * 3.0, TS, TM),
+    (176.0, TS * 3.0, TS, TS),
+    (192.0, TS * 3.0, TS, TM),
+    (208.0, TS * 3.0, TS, TM),
+    (224.0, TS * 3.0, TS, TM),
+    (240.0, TS * 3.0, TS, TM),
+    //5
+    (0.,    TT * 9.0, TS, TS),
+    (16.,   TT * 9.0, TS, TS),
+    (32.,   TT * 9.0, TS, TS),
+    (48.,   TT * 9.0, TS, TS),
+    (64.,   TT * 9.0, TS, TS),
+    (80.,   TT * 9.0, TS, TS),
+    (96.,   TT * 9.0, TS, TS),
+    (112.0, TT * 9.0, TS, TS),
+    (128.0, TT * 9.0, TS, TS),
+    (144.0, TT * 9.0, TS, TS),
+    (160.0, TT * 9.0, TS, TS),
+    (176.0, TT * 8.0, TS, TM),
+    (192.0, TT * 9.0, TS, TS),
+    (208.0, TT * 9.0, TS, TS),
+    (224.0, TT * 9.0, TS, TS),
+    (240.0, TT * 9.0, TS, TM),
+    
+    //6
+    (0.,    TT * 11.0, TS, TS),
+    (16.,   TT * 11.0, TS, TS),
+    (32.,   TT * 11.0, TS, TS),
+    (48.,   TT * 11.0, TS, TS),
+    (64.,   TT * 11.0, TS, TS),
+    (80.,   TT * 11.0, TS, TS),
+    (96.,   TT * 11.0, TS, TS),
+    (112.0, TT * 11.0, TS, TM),
+    (128.0, TT * 11.0, TS, TM),
+    (144.0, TT * 11.0, TS, TM),
+    (160.0, TT * 11.0, TS, TM),
+    (176.0, TT * 11.0, TS, TM),
+    (192.0, TT * 11.0, TS, TM),
+    (208.0, TT * 11.0, TM, TS),
+    (224.0, TT * 12.0, TS, TM),
+
+
+    //7 TINY mario
+    (0.,    TT * 13.0, TS, TS),
+    (16.,   TT * 13.0, TS, TS),
+    (32.,   TT * 13.0, TS, TS),
+    (48.,   TT * 13.0, TS, TS),
+    (64.,   TT * 13.0, TS, TS),
+    (80.,   TT * 13.0, TS, TS),
+    (96.,   TT * 13.0, TS, TS),
 ];
 
-enum SpriteTile {
+#[allow(dead_code)]
+enum EntityTile {
     BuzzyBeetle1 = 0,
     BuzzyBeetle2 = 1,
     BuzzyBeetle3 = 2,
+    
+    MarioSmallIdle = 75,
+    MarioSmallRun1 = 76,
+    MarioSmallRun2 = 77,
+    MarioSmallJump1 = 78,
+    MarioSmallJump2 = 79,
+    MarioSmallJump3 = 80,
+    MarioSmallDead = 81,
+    
+    MarioSmallSwim1 = 92,
+    MarioSmallSwim2 = 93,
+    MarioSmallSwim3 = 94,
+    MarioSmallSwim4 = 95,
+    MarioSmallSwim5 = 96
 }
 
 fn main() {
@@ -130,6 +207,7 @@ fn main() {
             ..default()
         }))
         .add_plugin(WorldInspectorPlugin::new())
+        .add_system(bevy::window::close_on_esc)
         .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
         .add_startup_system_to_stage(StartupStage::Startup, build_map)
         .add_startup_system_to_stage(StartupStage::Startup, spawn_mario)
@@ -147,7 +225,7 @@ fn load_assets(
     let mut sprites_texture_atlas =
         TextureAtlas::new_empty(sprites_texture_handle, Vec2::new(29.0 * 8.0, 29.0 * 8.0));
 
-    for sprite_dim in SPRITES_DIM {
+    for sprite_dim in ENTITIES_DIM {
         sprites_texture_atlas.add_texture(Rect::new(
             sprite_dim.0,
             sprite_dim.1,
@@ -219,7 +297,7 @@ fn spawn_mario(
         SpriteSheetBundle {
             texture_atlas: sprites_handle.0.clone(),
             transform: Transform::from_xyz(32., 32., 1.0),
-            sprite: TextureAtlasSprite::new(4),
+            sprite: TextureAtlasSprite::new(EntityTile::MarioSmallIdle as usize),
             ..default()
         },
         Player,
@@ -269,5 +347,9 @@ fn move_camera(
 
     if keyboard_input.pressed(KeyCode::Minus) {
         transform.scale *= 1.2;
+    }
+
+    if keyboard_input.pressed(KeyCode::Escape) {
+
     }
 }
