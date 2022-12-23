@@ -2,9 +2,11 @@ mod config;
 mod level;
 mod physics;
 
-use physics::{PhysicsPlugin, ForceFriction, ForceGravity, ForceJump, ForceRun , Velocity};
-use bevy::{prelude::*, render::camera::WindowOrigin, time::FixedTimestep};
+use std::collections::HashSet;
+
+use bevy::{prelude::*, render::camera::WindowOrigin};
 use bevy_inspector_egui::WorldInspectorPlugin;
+use physics::{Force, ForceKind, Forces, PhysicsPlugin, Velocity};
 use std::collections::HashMap;
 
 #[derive(Component)]
@@ -136,26 +138,30 @@ fn load_assets(
 
 fn build_map(mut commands: Commands, game_resource: Res<Game>, tiles_handle: Res<TilesHandle>) {
     let current_level = level::LevelFile::new(config::LEVELS[game_resource.level.current]);
-    for y in 0..current_level.dims.1 {
-        for x in 0..current_level.dims.0 {
-            let pos = (x, y);
-            let tile = current_level.get(pos);
-            let index_map = game_resource.map_to_index.get(&tile).unwrap();
-            commands
-                .spawn(SpriteSheetBundle {
-                    texture_atlas: tiles_handle.0.clone(),
-                    transform: Transform::from_xyz((x * 16) as f32, (y * 16) as f32, 0.0),
-                    sprite: TextureAtlasSprite::new(*index_map),
-                    ..default()
-                })
-                .insert(Name(String::from(tile)))
-                .insert(Index(pos.0, pos.1));
-            // match tile {
-            //     'C' => {}
-            //     _ => {}
-            // }
-        }
-    }
+    commands
+        .spawn((TransformBundle::default(), VisibilityBundle::default()))
+        .add_children(|parent| {
+            for y in 0..current_level.dims.1 {
+                for x in 0..current_level.dims.0 {
+                    let pos = (x, y);
+                    let tile = current_level.get(pos);
+                    let index_map = game_resource.map_to_index.get(&tile).unwrap();
+                    parent
+                        .spawn(SpriteSheetBundle {
+                            texture_atlas: tiles_handle.0.clone(),
+                            transform: Transform::from_xyz((x * 16) as f32, (y * 16) as f32, 0.0),
+                            sprite: TextureAtlasSprite::new(*index_map),
+                            ..default()
+                        })
+                        .insert(Name(String::from(tile)))
+                        .insert(Index(pos.0, pos.1));
+                    // match tile {
+                    //     'C' => {}
+                    //     _ => {}
+                    // }
+                }
+            }
+        });
 }
 
 fn spawn_mario(
@@ -171,27 +177,34 @@ fn spawn_mario(
             ..default()
         },
         Player,
-        // ForceGravity(Vec2::new(0.0, -0.001)),
-        ForceGravity(Vec2::new(0.0, 0.0)),
-        ForceRun(Vec2::new(0.0, 0.0)),
-        ForceJump(Vec2::new(0.0, 0.0)),
-        Velocity(Vec2::new(0.0, 0.0)),
+        Forces(HashSet::from_iter(vec![Force::new(
+            ForceKind::Gravity,
+            Vec2::new(0.0, 0.0),
+        )])),
+        Velocity(Vec2::new(1.0, 0.0)),
     ));
 }
 
-
 fn mario_controller(
     keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<(&mut ForceRun, &mut ForceJump), With<Player>>,
+    mut query: Query<&mut Forces, With<Player>>,
 ) {
-    let (mut force_run, mut force_jump) = query.get_single_mut().unwrap();
+    let forces = &mut query.get_single_mut().unwrap().0;
+    let mut pressed = false;
     if keyboard_input.pressed(KeyCode::Left) {
-        force_run.0.x += -0.001;
+        forces.replace(Force::new(ForceKind::Run, Vec2::new(-1.0, 0.0)));
+        pressed = true;
     } else if keyboard_input.pressed(KeyCode::Right) {
-        force_run.0.x += 0.001;
+        forces.replace(Force::new(ForceKind::Run, Vec2::new(0.001, 0.0)));
+        pressed = true;
     }
+
+    if !pressed {
+        forces.replace(Force::new(ForceKind::Run, Vec2::new(0.0, 0.0)));
+    }
+
     if keyboard_input.pressed(KeyCode::Space) {
-        force_jump.0.y += 0.001;
+        forces.replace(Force::new(ForceKind::Jump, Vec2::new(0.0, 0.1)));
     }
 }
 

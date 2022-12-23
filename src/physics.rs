@@ -1,31 +1,91 @@
-use bevy::{prelude::*, render::camera::WindowOrigin, time::FixedTimestep};
+use std::{collections::HashSet, hash::Hash, hash::Hasher};
+
+use bevy::{prelude::*, time::FixedTimestep};
+
 use crate::config;
-pub struct PhysicsPlugin;
 
+// #[derive(Component, Default, Clone, Copy)]
+// pub struct ForceGravity(pub Vec2);
+// #[derive(Component, Default, Clone, Copy)]
+// pub struct ForceRun(pub Vec2);
+// #[derive(Component, Default, Clone, Copy)]
+// pub struct ForceJump(pub Vec2);
+// #[derive(Component, Default, Clone, Copy)]
+// pub struct ForceFriction(pub Vec2);
 
-#[derive(Component, Default, Clone, Copy)]
-pub struct ForceGravity(pub Vec2);
-#[derive(Component, Default, Clone, Copy)]
-pub struct ForceRun(pub Vec2);
-#[derive(Component, Default, Clone, Copy)]
-pub struct ForceJump(pub Vec2);
-#[derive(Component, Default, Clone, Copy)]
-pub struct ForceFriction(pub Vec2);
+// #[derive(Component, Clone, Debug, Copy)]
+// pub enum ForceType {
+//     Gravity(Vec2),
+//     Run(Vec2),
+//     Jump(Vec2),
+//     Friction(Vec2),
+// }
 
-enum ForceType {
-    ForceGravity(Vec2),
-    ForceRun(Vec2),
-    ForceJump(Vec2),
-    ForceFriction(Vec2),
+#[derive(Component, Default, Clone, Debug, Copy, Hash, Eq, PartialEq)]
+pub enum ForceKind {
+    #[default]
+    Run,
+    Gravity,
+    Jump,
+    Friction,
 }
 
-struct Forces(Vec<ForceType>);
+// impl Hash for ForceType {
+//     fn hash<H: Hasher>(&self, state: &mut H) {
+//         match self {
+//             ForceType::Gravity(_) => state.write_u8(0),
+//             ForceType::Run(_) => state.write_u8(1),
+//             ForceType::Jump(_) => state.write_u8(2),
+//             ForceType::Friction(_) => state.write_u8(3),
+//         }
+//     }
+// }
+
+// impl PartialEq for ForceType {
+//     fn eq(&self, other: &Self) -> bool {
+//         match (self, other) {
+//             (ForceType::Gravity(_), ForceType::Gravity(_)) => true,
+//             (ForceType::Run(_), ForceType::Run(_)) => true,
+//             (ForceType::Jump(_), ForceType::Jump(_)) => true,
+//             (ForceType::Friction(_), ForceType::Friction(_)) => true,
+//             _ => false
+//         }
+//     }
+// }
+// impl Eq for ForceType {}
+
+#[derive(Component, Default, Clone)]
+pub struct Force {
+    kind: ForceKind,
+    vec: Vec2,
+}
+
+impl Force {
+    pub fn new(kind: ForceKind, vec: Vec2) -> Self {
+        Force { kind, vec }
+    }
+}
+
+impl Hash for Force {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.kind.hash(state);
+    }
+}
+
+impl PartialEq for Force {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind
+    }
+}
+impl Eq for Force {}
+
+#[derive(Component, Default, Clone)]
+pub struct Forces(pub HashSet<Force>);
 
 #[derive(Component, Default, Clone, Copy)]
 pub struct Velocity(pub Vec2);
 
-
-
+pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set_to_stage(
@@ -33,43 +93,29 @@ impl Plugin for PhysicsPlugin {
             SystemSet::new()
                 .with_run_criteria(FixedTimestep::step(config::TIME_STEP))
                 .label("forces")
-                .with_system(aplly_forces).label("forces")
+                .with_system(aplly_forces)
+                .label("forces"),
         )
         .add_system_set_to_stage(
             CoreStage::Update,
             SystemSet::new()
                 .with_run_criteria(FixedTimestep::step(config::TIME_STEP))
                 .after("forces")
-                .with_system(aplly_velocity)
+                .with_system(aplly_velocity),
         );
     }
 }
 
-
-fn aplly_velocity(mut query: Query<(&mut Transform, &Velocity), With<Velocity>>) {
+fn aplly_velocity(mut query: Query<(&mut Transform, &Velocity), With<Velocity>>, dt: Res<Time>) {
     for (mut transform, velocity) in query.iter_mut() {
         transform.translation += Vec3::from((velocity.0, 0.0));
     }
 }
 
-
-#[allow(clippy::type_complexity)]
-fn aplly_forces(
-    mut query: Query<
-        (&mut Velocity, Option<&ForceGravity>, Option<&ForceRun>),
-        Or<(With<ForceGravity>, With<ForceRun>)>,
-    >,
-) {
-    let mut acceleration = Vec2::splat(0.0);
-    for (mut velocity, gravity, force_run) in query.iter_mut() {
-        if let Some(force) = gravity {
-            acceleration += force.0;
-        }
-        if let Some(force) = force_run {
-            acceleration += force.0;
-        }
-        velocity.0 += acceleration
+fn aplly_forces(mut query: Query<(&mut Velocity, &mut Forces)>, dt: Res<Time>) {
+    for (mut velocity, forces) in query.iter_mut() {
+        let total_force: Vec2 = forces.0.iter().map(|x| x.vec).sum();
+        let acceleration = total_force / 1.0;
+        velocity.0 += acceleration * dt.elapsed_seconds();
     }
 }
-
-
