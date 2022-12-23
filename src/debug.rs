@@ -1,15 +1,35 @@
-use bevy::prelude::*;
 use crate::Game;
 
-pub struct DebugPlugin;
-impl Plugin for DebugPlugin {
+use bevy::{prelude::*, app::PluginGroupBuilder};
+use bevy_inspector_egui::{WorldInspectorPlugin, RegisterInspectable};
+use crate::physics::{Velocity, ForceKind, Force};
+
+
+struct InputPlugin;
+impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set_to_stage(
             CoreStage::PreUpdate,
             SystemSet::new()
                 .with_system(toggle_fullscreen)
                 .with_system(move_camera)
-        ).add_system(bevy::window::close_on_esc);
+        )
+            .add_system(bevy::window::close_on_esc)
+            .register_inspectable::<Velocity>()
+            .register_inspectable::<ForceKind>()
+            .register_inspectable::<Force>();
+    }
+}
+
+pub struct DebugPlugins;
+impl PluginGroup for DebugPlugins {
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
+            .add(InputPlugin)
+            .add(WorldInspectorPlugin::new()
+
+            )
+
     }
 }
 

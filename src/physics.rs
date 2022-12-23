@@ -1,11 +1,12 @@
 use std::{collections::HashSet, hash::Hash, hash::Hasher};
 
 use bevy::{prelude::*, time::FixedTimestep};
+use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 
 use crate::config;
 
 
-#[derive(Component, Default, Clone, Debug, Copy, Hash, Eq, PartialEq)]
+#[derive(Component, Inspectable,  Default, Clone, Debug, Copy, Hash, Eq, PartialEq)]
 pub enum ForceKind {
     #[default]
     Run,
@@ -14,7 +15,9 @@ pub enum ForceKind {
     Friction,
 }
 
-#[derive(Component, Default, Clone)]
+
+
+#[derive(Component, Inspectable, Default, Clone)]
 pub struct Force {
     kind: ForceKind,
     vec: Vec2,
@@ -41,8 +44,7 @@ impl Eq for Force {}
 
 #[derive(Component, Default, Clone)]
 pub struct Forces(pub HashSet<Force>);
-
-#[derive(Component, Default, Clone, Copy)]
+#[derive(Component, Inspectable, Default, Clone, Copy)]
 pub struct Velocity(pub Vec2);
 
 pub struct PhysicsPlugin;

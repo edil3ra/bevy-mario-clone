@@ -7,13 +7,13 @@ use std::collections::HashSet;
 use bevy::{prelude::*, render::camera::WindowOrigin};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use physics::{Force, ForceKind, Forces, PhysicsPlugin, Velocity};
-use debug::{DebugPlugin};
+use debug::{DebugPlugins};
 use std::collections::HashMap;
 
 #[derive(Component)]
 struct Index(usize, usize);
-#[derive(Component)]
-struct Name(String);
+// #[derive(Component)]
+// struct Name(String);
 #[derive(Component)]
 struct Player;
 
@@ -70,8 +70,7 @@ fn main() {
             },
             ..default()
         }))
-        .add_plugin(WorldInspectorPlugin::new())
-        .add_plugin(DebugPlugin)
+        .add_plugins(DebugPlugins)
         .add_plugin(PhysicsPlugin)
 
         .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
@@ -139,7 +138,7 @@ fn load_assets(
 fn build_map(mut commands: Commands, game_resource: Res<Game>, tiles_handle: Res<TilesHandle>) {
     let current_level = level::LevelFile::new(config::LEVELS[game_resource.level.current]);
     commands
-        .spawn((TransformBundle::default(), VisibilityBundle::default()))
+        .spawn((TransformBundle::default(), VisibilityBundle::default(), Name::new("map")))
         .add_children(|parent| {
             for y in 0..current_level.dims.1 {
                 for x in 0..current_level.dims.0 {
@@ -153,7 +152,7 @@ fn build_map(mut commands: Commands, game_resource: Res<Game>, tiles_handle: Res
                             sprite: TextureAtlasSprite::new(*index_map),
                             ..default()
                         })
-                        .insert(Name(String::from(tile)))
+                        .insert(Name::new(tile.to_string()))
                         .insert(Index(pos.0, pos.1));
                     // match tile {
                     //     'C' => {}
@@ -176,6 +175,7 @@ fn spawn_mario(
             sprite: TextureAtlasSprite::new(config::EntityTile::MarioSmallIdle as usize),
             ..default()
         },
+        Name::new("mario"),
         Player,
         Forces(HashSet::from_iter(vec![Force::new(
             ForceKind::Gravity,
