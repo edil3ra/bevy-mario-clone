@@ -1,7 +1,8 @@
-
 mod config;
 mod level;
+mod physics;
 
+use physics::{PhysicsPlugin, ForceFriction, ForceGravity, ForceJump, ForceRun , Velocity};
 use bevy::{prelude::*, render::camera::WindowOrigin, time::FixedTimestep};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use std::collections::HashMap;
@@ -12,18 +13,6 @@ struct Index(usize, usize);
 struct Name(String);
 #[derive(Component)]
 struct Player;
-
-#[derive(Component, Default, Clone, Copy)]
-struct ForceGravity(Vec2);
-#[derive(Component, Default, Clone, Copy)]
-struct ForceRun(Vec2);
-#[derive(Component, Default, Clone, Copy)]
-struct ForceJump(Vec2);
-#[derive(Component, Default, Clone, Copy)]
-struct ForceFriction(Vec2);
-
-#[derive(Component, Default, Clone, Copy)]
-struct Velocity(Vec2);
 
 #[derive(Debug, Resource)]
 struct TilesHandle(Handle<TextureAtlas>);
@@ -94,20 +83,7 @@ fn main() {
                 .with_system(move_camera)
                 .with_system(mario_controller),
         )
-        .add_system_set_to_stage(
-            CoreStage::Update,
-            SystemSet::new()
-                .with_run_criteria(FixedTimestep::step(config::TIME_STEP))
-                .label("forces")
-                .with_system(aplly_forces).label("forces")
-        )
-        .add_system_set_to_stage(
-            CoreStage::Update,
-            SystemSet::new()
-                .with_run_criteria(FixedTimestep::step(config::TIME_STEP))
-                .after("forces")
-                .with_system(aplly_velocity)
-        )
+        .add_plugin(PhysicsPlugin)
         .run();
 }
 
@@ -203,32 +179,6 @@ fn spawn_mario(
     ));
 }
 
-fn aplly_velocity(mut query: Query<(&mut Transform, &Velocity), With<Velocity>>) {
-    for (mut transform, velocity) in query.iter_mut() {
-        transform.translation += Vec3::from((velocity.0, 0.0));
-    }
-}
-
-
-
-#[allow(clippy::type_complexity)]
-fn aplly_forces(
-    mut query: Query<
-        (&mut Velocity, Option<&ForceGravity>, Option<&ForceRun>),
-        Or<(With<ForceGravity>, With<ForceRun>)>,
-    >,
-) {
-    let mut acceleration = Vec2::splat(0.0);
-    for (mut velocity, gravity, force_run) in query.iter_mut() {
-        if let Some(force) = gravity {
-            acceleration += force.0;
-        }
-        if let Some(force) = force_run {
-            acceleration += force.0;
-        }
-        velocity.0 += acceleration
-    }
-}
 
 fn mario_controller(
     keyboard_input: Res<Input<KeyCode>>,
