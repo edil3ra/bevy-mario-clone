@@ -1,12 +1,13 @@
 mod config;
 mod level;
 mod physics;
-
+mod debug;
 use std::collections::HashSet;
 
 use bevy::{prelude::*, render::camera::WindowOrigin};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use physics::{Force, ForceKind, Forces, PhysicsPlugin, Velocity};
+use debug::{DebugPlugin};
 use std::collections::HashMap;
 
 #[derive(Component)]
@@ -23,7 +24,7 @@ struct TilesHandle(Handle<TextureAtlas>);
 struct SpritesHandle(Handle<TextureAtlas>);
 
 #[derive(Debug, Resource, Default)]
-struct Game {
+pub struct Game {
     level: level::Level,
     map_to_index: HashMap<char, usize>,
     is_fullscreen: bool,
@@ -70,7 +71,9 @@ fn main() {
             ..default()
         }))
         .add_plugin(WorldInspectorPlugin::new())
-        .add_system(bevy::window::close_on_esc)
+        .add_plugin(DebugPlugin)
+        .add_plugin(PhysicsPlugin)
+
         .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
         .add_startup_system_set_to_stage(
             StartupStage::Startup,
@@ -81,11 +84,8 @@ fn main() {
         .add_system_set_to_stage(
             CoreStage::PreUpdate,
             SystemSet::new()
-                .with_system(toggle_fullscreen)
-                .with_system(move_camera)
                 .with_system(mario_controller),
         )
-        .add_plugin(PhysicsPlugin)
         .run();
 }
 
@@ -205,51 +205,5 @@ fn mario_controller(
 
     if keyboard_input.pressed(KeyCode::Space) {
         forces.replace(Force::new(ForceKind::Jump, Vec2::new(0.0, 0.1)));
-    }
-}
-
-fn toggle_fullscreen(
-    mut game_resource: ResMut<Game>,
-    input: Res<Input<KeyCode>>,
-    mut windows: ResMut<Windows>,
-) {
-    let window = windows.primary_mut();
-    if input.just_pressed(KeyCode::F12) {
-        if game_resource.is_fullscreen {
-            window.set_mode(WindowMode::Windowed);
-        } else {
-            window.set_mode(WindowMode::BorderlessFullscreen);
-        }
-        game_resource.is_fullscreen = !game_resource.is_fullscreen
-    }
-}
-
-fn move_camera(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<&mut Transform, With<Camera2d>>,
-) {
-    let mut transform = query.get_single_mut().unwrap();
-    if keyboard_input.pressed(KeyCode::G) {
-        transform.translation.x += -10.0;
-    }
-
-    if keyboard_input.pressed(KeyCode::C) {
-        transform.translation.x += 10.0;
-    }
-
-    if keyboard_input.pressed(KeyCode::R) {
-        transform.translation.y += 10.0;
-    }
-
-    if keyboard_input.pressed(KeyCode::L) {
-        transform.translation.y += -10.0;
-    }
-
-    if keyboard_input.pressed(KeyCode::Plus) {
-        transform.scale *= 0.8;
-    }
-
-    if keyboard_input.pressed(KeyCode::Minus) {
-        transform.scale *= 1.2;
     }
 }

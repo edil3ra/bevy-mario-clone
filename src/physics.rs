@@ -4,22 +4,6 @@ use bevy::{prelude::*, time::FixedTimestep};
 
 use crate::config;
 
-// #[derive(Component, Default, Clone, Copy)]
-// pub struct ForceGravity(pub Vec2);
-// #[derive(Component, Default, Clone, Copy)]
-// pub struct ForceRun(pub Vec2);
-// #[derive(Component, Default, Clone, Copy)]
-// pub struct ForceJump(pub Vec2);
-// #[derive(Component, Default, Clone, Copy)]
-// pub struct ForceFriction(pub Vec2);
-
-// #[derive(Component, Clone, Debug, Copy)]
-// pub enum ForceType {
-//     Gravity(Vec2),
-//     Run(Vec2),
-//     Jump(Vec2),
-//     Friction(Vec2),
-// }
 
 #[derive(Component, Default, Clone, Debug, Copy, Hash, Eq, PartialEq)]
 pub enum ForceKind {
@@ -29,30 +13,6 @@ pub enum ForceKind {
     Jump,
     Friction,
 }
-
-// impl Hash for ForceType {
-//     fn hash<H: Hasher>(&self, state: &mut H) {
-//         match self {
-//             ForceType::Gravity(_) => state.write_u8(0),
-//             ForceType::Run(_) => state.write_u8(1),
-//             ForceType::Jump(_) => state.write_u8(2),
-//             ForceType::Friction(_) => state.write_u8(3),
-//         }
-//     }
-// }
-
-// impl PartialEq for ForceType {
-//     fn eq(&self, other: &Self) -> bool {
-//         match (self, other) {
-//             (ForceType::Gravity(_), ForceType::Gravity(_)) => true,
-//             (ForceType::Run(_), ForceType::Run(_)) => true,
-//             (ForceType::Jump(_), ForceType::Jump(_)) => true,
-//             (ForceType::Friction(_), ForceType::Friction(_)) => true,
-//             _ => false
-//         }
-//     }
-// }
-// impl Eq for ForceType {}
 
 #[derive(Component, Default, Clone)]
 pub struct Force {
