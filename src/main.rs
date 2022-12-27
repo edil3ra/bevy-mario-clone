@@ -2,18 +2,15 @@ mod config;
 mod level;
 mod physics;
 mod debug;
-use std::collections::HashSet;
-
 use bevy::{prelude::*, render::camera::WindowOrigin};
-use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy::utils::HashSet;
 use physics::{Force, ForceKind, Forces, PhysicsPlugin, Velocity};
 use debug::{DebugPlugins};
 use std::collections::HashMap;
 
 #[derive(Component)]
 struct Index(usize, usize);
-// #[derive(Component)]
-// struct Name(String);
+
 #[derive(Component)]
 struct Player;
 

@@ -1,12 +1,11 @@
-use std::{collections::HashSet, hash::Hash, hash::Hasher};
-
-use bevy::{prelude::*, time::FixedTimestep};
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
+use bevy::utils::HashSet;
+use std::hash::{Hash, Hasher};
 
 use crate::config;
+use bevy::{prelude::*, time::FixedTimestep};
+use bevy_inspector_egui::{Inspectable};
 
-
-#[derive(Component, Inspectable,  Default, Clone, Debug, Copy, Hash, Eq, PartialEq)]
+#[derive(Component, Inspectable, Default, Clone, Debug, Copy, Hash, Eq, PartialEq)]
 pub enum ForceKind {
     #[default]
     Run,
@@ -14,8 +13,6 @@ pub enum ForceKind {
     Jump,
     Friction,
 }
-
-
 
 #[derive(Component, Inspectable, Default, Clone)]
 pub struct Force {
@@ -42,14 +39,19 @@ impl PartialEq for Force {
 }
 impl Eq for Force {}
 
-#[derive(Component, Default, Clone)]
+#[derive(Component, Reflect, Default, Clone)]
+#[reflect(Component)]
 pub struct Forces(pub HashSet<Force>);
+
 #[derive(Component, Inspectable, Default, Clone, Copy)]
 pub struct Velocity(pub Vec2);
 
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<Forces>()
+            .register_type::<HashSet<Force>>();
+
         app.add_system_set_to_stage(
             CoreStage::Update,
             SystemSet::new()
