@@ -1,27 +1,29 @@
 mod config;
 mod debug;
 mod level;
+mod map;
 mod physics;
 use bevy::utils::HashSet;
 use bevy::{prelude::*, render::camera::WindowOrigin};
 use debug::DebugPlugins;
+use map::MapPlugin;
 use physics::{Body, Force, ForceKind, PhysicsPlugin};
 use std::collections::HashMap;
 
-#[derive(Component)]
-struct Index(usize, usize);
 
 #[derive(Component)]
 struct Player;
 
-#[derive(Debug, Resource)]
-struct TilesHandle(Handle<TextureAtlas>);
 
-#[derive(Debug, Resource)]
-struct SpritesHandle(Handle<TextureAtlas>);
+#[derive(Debug, Default)]
+pub struct AssetsHandle {
+    tiles: Handle<TextureAtlas>,
+    sprites: Handle<TextureAtlas>
+}
 
-#[derive(Debug, Resource, Default)]
+#[derive(Debug, Default, Resource)]
 pub struct Game {
+    assets: AssetsHandle,
     level: level::Level,
     map_to_index: HashMap<char, usize>,
     is_fullscreen: bool,
@@ -67,15 +69,15 @@ fn main() {
             },
             ..default()
         }))
+        .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
         .add_plugins(DebugPlugins)
         .add_plugin(PhysicsPlugin {
             init_gravity: Vec2::new(0., 1.0)
         })
-        .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
+        .add_plugin(MapPlugin {})
         .add_startup_system_set_to_stage(
             StartupStage::Startup,
             SystemSet::new()
-                .with_system(build_map)
                 .with_system(spawn_mario),
         )
         .add_system_set_to_stage(
@@ -87,6 +89,7 @@ fn main() {
 
 fn load_assets(
     mut commands: Commands,
+    mut game_res: ResMut<Game>,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
@@ -114,8 +117,8 @@ fn load_assets(
     );
     let tiles_texture_atlas_handle = texture_atlases.add(tiles_texture_atlas);
 
-    commands.insert_resource(TilesHandle(tiles_texture_atlas_handle));
-    commands.insert_resource(SpritesHandle(sprites_texture_atlas_handle));
+    game_res.assets.tiles = tiles_texture_atlas_handle;
+    game_res.assets.sprites = sprites_texture_atlas_handle;
 
     let scale_factor = config::WINDOW_HEIGHT / config::TILE_SIZE / config::TILE_MAX_HEIGHT;
     commands.spawn(Camera2dBundle {
@@ -132,46 +135,13 @@ fn load_assets(
     });
 }
 
-fn build_map(mut commands: Commands, game_resource: Res<Game>, tiles_handle: Res<TilesHandle>) {
-    let current_level = level::LevelFile::new(config::LEVELS[game_resource.level.current]);
-    commands
-        .spawn((
-            TransformBundle::default(),
-            VisibilityBundle::default(),
-            Name::new("map"),
-        ))
-        .add_children(|parent| {
-            for y in 0..current_level.dims.1 {
-                for x in 0..current_level.dims.0 {
-                    let pos = (x, y);
-                    let tile = current_level.get(pos);
-                    let index_map = game_resource.map_to_index.get(&tile).unwrap();
-                    parent
-                        .spawn(SpriteSheetBundle {
-                            texture_atlas: tiles_handle.0.clone(),
-                            transform: Transform::from_xyz((x * 16) as f32, (y * 16) as f32, 0.0),
-                            sprite: TextureAtlasSprite::new(*index_map),
-                            ..default()
-                        })
-                        .insert(Name::new(tile.to_string()))
-                        .insert(Index(pos.0, pos.1));
-                    // match tile {
-                    //     'C' => {}
-                    //     _ => {}
-                    // }
-                }
-            }
-        });
-}
-
 fn spawn_mario(
     mut commands: Commands,
     game_resource: Res<Game>,
-    sprites_handle: Res<SpritesHandle>,
 ) {
     commands.spawn((
         SpriteSheetBundle {
-            texture_atlas: sprites_handle.0.clone(),
+            texture_atlas: game_resource.assets.sprites.clone(),
             transform: Transform::from_xyz(32., 32., 1.0),
             sprite: TextureAtlasSprite::new(config::EntityTile::MarioSmallIdle as usize),
             ..default()

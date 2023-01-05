@@ -69,7 +69,7 @@ pub struct PhysicsPlugin {
 impl Default for PhysicsPlugin {
     fn default() -> Self {
         PhysicsPlugin {
-            init_gravity: Vec2::new(0., -1.),
+            init_gravity: Vec2::new(0., -1.0),
         }
     }
 }
