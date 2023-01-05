@@ -2,7 +2,7 @@ use crate::Game;
 
 use bevy::{prelude::*, app::PluginGroupBuilder};
 use bevy_inspector_egui::{WorldInspectorPlugin, RegisterInspectable};
-use crate::physics::{Velocity, ForceKind, Force};
+use crate::physics::{ForceKind, Force};
 
 
 struct InputPlugin;
@@ -15,7 +15,6 @@ impl Plugin for InputPlugin {
                 .with_system(move_camera)
         )
             .add_system(bevy::window::close_on_esc)
-            .register_inspectable::<Velocity>()
             .register_inspectable::<ForceKind>()
             .register_inspectable::<Force>();
     }
@@ -27,9 +26,7 @@ impl PluginGroup for DebugPlugins {
         PluginGroupBuilder::start::<Self>()
             .add(InputPlugin)
             .add(WorldInspectorPlugin::new()
-
             )
-
     }
 }
 

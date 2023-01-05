@@ -14,7 +14,7 @@ pub enum ForceKind {
     Friction,
 }
 
-#[derive(Component, Inspectable, Default, Clone)]
+#[derive(Component, Inspectable, Default, Clone, Copy)]
 pub struct Force {
     kind: ForceKind,
     vec: Vec2,
@@ -39,19 +39,38 @@ impl PartialEq for Force {
 }
 impl Eq for Force {}
 
-#[derive(Component, Reflect, Default, Clone)]
-#[reflect(Component)]
-pub struct Forces(pub HashSet<Force>);
 
-#[derive(Component, Inspectable, Default, Clone, Copy)]
-pub struct Velocity(pub Vec2);
+#[derive(Component, Default, Clone)]
+pub struct Body {
+    pub mass: f64,
+    pub velocity: Vec2,
+    pub forces: HashSet<Force>,
+}
+
+impl Body {
+    pub fn new(mass: f64, inital_velocity: Vec2, forces: HashSet<Force>) -> Self {
+        Body {
+            mass,
+            velocity: inital_velocity,
+            forces,
+        }
+    }
+}
+
+#[derive(Debug, Resource, Default)]
+pub struct Physics {
+    gravity: Vec2
+}
 
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Forces>()
-            .register_type::<HashSet<Force>>();
+        app.register_type::<HashSet<Force>>();
 
+        app.insert_resource(Physics {
+            gravity: Vec2::new(0., -1.)
+        });
+        
         app.add_system_set_to_stage(
             CoreStage::Update,
             SystemSet::new()
@@ -70,16 +89,19 @@ impl Plugin for PhysicsPlugin {
     }
 }
 
-fn aplly_velocity(mut query: Query<(&mut Transform, &Velocity), With<Velocity>>, dt: Res<Time>) {
-    for (mut transform, velocity) in query.iter_mut() {
-        transform.translation += Vec3::from((velocity.0, 0.0));
+
+
+fn aplly_velocity(mut query: Query<(&mut Transform, &Body), With<Body>>, dt: Res<Time>) {
+    for (mut transform, body) in query.iter_mut() {
+        transform.translation += Vec3::from((body.velocity, 0.0)) * dt.elapsed_seconds();
     }
 }
 
-fn aplly_forces(mut query: Query<(&mut Velocity, &mut Forces)>, dt: Res<Time>) {
-    for (mut velocity, forces) in query.iter_mut() {
-        let total_force: Vec2 = forces.0.iter().map(|x| x.vec).sum();
+fn aplly_forces(physics_res: Res<Physics>, mut query: Query<&mut Body>) {
+    for mut body in query.iter_mut() {
+        let body_force: Vec2 = body.forces.iter().map(|x| x.vec).sum();
+        let total_force: Vec2 = body_force + physics_res.gravity;
         let acceleration = total_force / 1.0;
-        velocity.0 += acceleration * dt.elapsed_seconds();
+        body.velocity += acceleration
     }
 }

@@ -1,11 +1,11 @@
 mod config;
+mod debug;
 mod level;
 mod physics;
-mod debug;
-use bevy::{prelude::*, render::camera::WindowOrigin};
 use bevy::utils::HashSet;
-use physics::{Force, ForceKind, Forces, PhysicsPlugin, Velocity};
-use debug::{DebugPlugins};
+use bevy::{prelude::*, render::camera::WindowOrigin};
+use debug::DebugPlugins;
+use physics::{Body, Force, ForceKind, PhysicsPlugin};
 use std::collections::HashMap;
 
 #[derive(Component)]
@@ -69,7 +69,6 @@ fn main() {
         }))
         .add_plugins(DebugPlugins)
         .add_plugin(PhysicsPlugin)
-
         .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
         .add_startup_system_set_to_stage(
             StartupStage::Startup,
@@ -79,8 +78,7 @@ fn main() {
         )
         .add_system_set_to_stage(
             CoreStage::PreUpdate,
-            SystemSet::new()
-                .with_system(mario_controller),
+            SystemSet::new().with_system(mario_controller),
         )
         .run();
 }
@@ -135,7 +133,11 @@ fn load_assets(
 fn build_map(mut commands: Commands, game_resource: Res<Game>, tiles_handle: Res<TilesHandle>) {
     let current_level = level::LevelFile::new(config::LEVELS[game_resource.level.current]);
     commands
-        .spawn((TransformBundle::default(), VisibilityBundle::default(), Name::new("map")))
+        .spawn((
+            TransformBundle::default(),
+            VisibilityBundle::default(),
+            Name::new("map"),
+        ))
         .add_children(|parent| {
             for y in 0..current_level.dims.1 {
                 for x in 0..current_level.dims.0 {
@@ -174,19 +176,20 @@ fn spawn_mario(
         },
         Name::new("mario"),
         Player,
-        Forces(HashSet::from_iter(vec![Force::new(
-            ForceKind::Gravity,
-            Vec2::new(0.0, 0.0),
-        )])),
-        Velocity(Vec2::new(1.0, 0.0)),
+        Body::new(
+            1.0,
+            Vec2::new(0., 0.),
+            HashSet::new(),
+            // HashSet::from_iter(vec![Force::new(ForceKind::Gravity, Vec2::new(0.0, 0.1))]),
+        ),
     ));
 }
 
 fn mario_controller(
     keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<&mut Forces, With<Player>>,
+    mut query: Query<&mut Body, With<Player>>,
 ) {
-    let forces = &mut query.get_single_mut().unwrap().0;
+    let forces = &mut query.get_single_mut().unwrap().forces;
     let mut pressed = false;
     if keyboard_input.pressed(KeyCode::Left) {
         forces.replace(Force::new(ForceKind::Run, Vec2::new(-1.0, 0.0)));
