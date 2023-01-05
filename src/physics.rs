@@ -62,13 +62,24 @@ pub struct Physics {
     gravity: Vec2
 }
 
-pub struct PhysicsPlugin;
+pub struct PhysicsPlugin {
+    pub init_gravity: Vec2
+}
+
+impl Default for PhysicsPlugin {
+    fn default() -> Self {
+        PhysicsPlugin {
+            init_gravity: Vec2::new(0., -1.),
+        }
+    }
+}
+
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<HashSet<Force>>();
 
         app.insert_resource(Physics {
-            gravity: Vec2::new(0., -1.)
+            gravity: self.init_gravity
         });
         
         app.add_system_set_to_stage(

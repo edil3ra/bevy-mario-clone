@@ -68,7 +68,9 @@ fn main() {
             ..default()
         }))
         .add_plugins(DebugPlugins)
-        .add_plugin(PhysicsPlugin)
+        .add_plugin(PhysicsPlugin {
+            init_gravity: Vec2::new(0., 1.0)
+        })
         .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
         .add_startup_system_set_to_stage(
             StartupStage::Startup,
