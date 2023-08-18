@@ -1,22 +1,12 @@
 use crate::Game;
-
-use bevy::{prelude::*, app::PluginGroupBuilder};
-use bevy_inspector_egui::{WorldInspectorPlugin, RegisterInspectable};
-use crate::physics::{ForceKind, Force};
-
+use bevy::input::common_conditions::input_toggle_active;
+use bevy::{app::PluginGroupBuilder, prelude::*};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set_to_stage(
-            CoreStage::PreUpdate,
-            SystemSet::new()
-                .with_system(toggle_fullscreen)
-                .with_system(move_camera)
-        )
-            .add_system(bevy::window::close_on_esc)
-            .register_inspectable::<ForceKind>()
-            .register_inspectable::<Force>();
+        app.add_systems(Update, (move_camera, toggle_fullscreen));
     }
 }
 
@@ -25,24 +15,19 @@ impl PluginGroup for DebugPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(InputPlugin)
-            .add(WorldInspectorPlugin::new()
-            )
+            .add(WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)))
     }
 }
 
 fn toggle_fullscreen(
     mut game_resource: ResMut<Game>,
     input: Res<Input<KeyCode>>,
-    mut windows: ResMut<Windows>,
+    mut windows: Query<&mut Window>,
 ) {
-    let window = windows.primary_mut();
+    let mut window = windows.single_mut();
     if input.just_pressed(KeyCode::F12) {
-        if game_resource.is_fullscreen {
-            window.set_mode(WindowMode::Windowed);
-        } else {
-            window.set_mode(WindowMode::BorderlessFullscreen);
-        }
-        game_resource.is_fullscreen = !game_resource.is_fullscreen
+        game_resource.is_fullscreen = !game_resource.is_fullscreen;
+        window.set_maximized(game_resource.is_fullscreen);
     }
 }
 

@@ -1,24 +1,18 @@
 mod config;
 mod debug;
 mod level;
-mod map;
-mod physics;
-use bevy::utils::HashSet;
-use bevy::{prelude::*, render::camera::WindowOrigin};
-use debug::DebugPlugins;
-use map::MapPlugin;
-use physics::{Body, Force, ForceKind, PhysicsPlugin};
-use std::collections::HashMap;
 
+use bevy::prelude::*;
+use debug::DebugPlugins;
+use std::collections::HashMap;
 
 #[derive(Component)]
 struct Player;
 
-
 #[derive(Debug, Default)]
 pub struct AssetsHandle {
     tiles: Handle<TextureAtlas>,
-    sprites: Handle<TextureAtlas>
+    sprites: Handle<TextureAtlas>,
 }
 
 #[derive(Debug, Default, Resource)]
@@ -29,8 +23,16 @@ pub struct Game {
     is_fullscreen: bool,
 }
 
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+enum AppState {
+    #[default]
+    Load,
+    InGame,
+}
+
 fn main() {
     App::new()
+        .add_state::<AppState>()
         .insert_resource(Game {
             level: level::Level {
                 current: 0,
@@ -60,29 +62,23 @@ fn main() {
             ]),
             ..Default::default()
         })
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
-                width: config::WINDOW_WITDH,
-                height: config::WINDOW_HEIGHT,
-                mode: WindowMode::Windowed,
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    resolution: (config::WINDOW_WITDH, config::WINDOW_HEIGHT).into(),
+                    mode: bevy::window::WindowMode::BorderlessFullscreen,
+                    title: "Mario".into(),
+                    ..default()
+                }),
                 ..default()
-            },
-            ..default()
-        }))
-        .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
-        .add_plugins(DebugPlugins)
-        .add_plugin(PhysicsPlugin {
-            init_gravity: Vec2::new(0., 1.0)
-        })
-        .add_plugin(MapPlugin {})
-        .add_startup_system_set_to_stage(
-            StartupStage::Startup,
-            SystemSet::new()
-                .with_system(spawn_mario),
-        )
-        .add_system_set_to_stage(
-            CoreStage::PreUpdate,
-            SystemSet::new().with_system(mario_controller),
+            }),
+            DebugPlugins {},
+        ))
+        .add_systems(Startup, load_assets)
+        .add_systems(OnEnter(AppState::InGame), spawn_mario)
+        .add_systems(
+            Update,
+            (mario_controller).run_if(in_state(AppState::InGame)),
         )
         .run();
 }
@@ -92,6 +88,7 @@ fn load_assets(
     mut game_res: ResMut<Game>,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut next_state: ResMut<NextState<AppState>>,
 ) {
     let sprites_texture_handle = asset_server.load("textures/sprites.png");
     let mut sprites_texture_atlas =
@@ -128,17 +125,15 @@ fn load_assets(
             ..Default::default()
         },
         projection: OrthographicProjection {
-            window_origin: WindowOrigin::BottomLeft,
+            // window_origin: WindowOrigin::BottomLeft,
             ..Default::default()
         },
         ..Default::default()
     });
+    next_state.set(AppState::InGame);
 }
 
-fn spawn_mario(
-    mut commands: Commands,
-    game_resource: Res<Game>,
-) {
+fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
     commands.spawn((
         SpriteSheetBundle {
             texture_atlas: game_resource.assets.sprites.clone(),
@@ -148,34 +143,16 @@ fn spawn_mario(
         },
         Name::new("mario"),
         Player,
-        Body::new(
-            1.0,
-            Vec2::new(0., 0.),
-            HashSet::new(),
-            // HashSet::from_iter(vec![Force::new(ForceKind::Gravity, Vec2::new(0.0, 0.1))]),
-        ),
     ));
 }
 
-fn mario_controller(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<&mut Body, With<Player>>,
-) {
-    let forces = &mut query.get_single_mut().unwrap().forces;
-    let mut pressed = false;
+fn mario_controller(keyboard_input: Res<Input<KeyCode>>) {
     if keyboard_input.pressed(KeyCode::Left) {
-        forces.replace(Force::new(ForceKind::Run, Vec2::new(-1.0, 0.0)));
-        pressed = true;
+        info!("left");
     } else if keyboard_input.pressed(KeyCode::Right) {
-        forces.replace(Force::new(ForceKind::Run, Vec2::new(0.001, 0.0)));
-        pressed = true;
+        info!("right");
     }
-
-    if !pressed {
-        forces.replace(Force::new(ForceKind::Run, Vec2::new(0.0, 0.0)));
-    }
-
     if keyboard_input.pressed(KeyCode::Space) {
-        forces.replace(Force::new(ForceKind::Jump, Vec2::new(0.0, 0.1)));
+        info!("jump");
     }
 }

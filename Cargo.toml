@@ -12,6 +12,8 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-bevy = { version = "0.9", features = ["dynamic"] }
-bevy-inspector-egui = "0.15"
+bevy = { version = "0.11", features = ["dynamic_linking"] }
+bevy_ecs_tilemap = "0.11.0"
+bevy_rapier2d = { version = "0.22.0", features = [ "simd-stable", "debug-render-2d" ] }
+bevy-inspector-egui = "0.19.0"
 
