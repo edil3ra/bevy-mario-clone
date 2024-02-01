@@ -1,16 +1,17 @@
 pub const LEVEL_COUNT: usize = 1;
 pub const LEVELS: [&str; LEVEL_COUNT] = [include_str!("levels/level0.txt")];
-pub const TILE_SIZE: f32 = 16.0;
-pub const TILE_MAX_HEIGHT: f32 = 14.0;
-pub const WINDOW_WITDH: f32 = 1920.0;
+
+pub const WINDOW_WIDTH: f32 = 1920.0;
 pub const WINDOW_HEIGHT: f32 = 1080.0;
-pub const TIME_STEP: f64 = 1.0 / 60.0;
 
-pub const TT: f32 = 8.0;
-pub const TS: f32 = 16.0;
-pub const TM: f32 = 24.0;
-pub const TB: f32 = 32.0;
+pub const TILE_SIZE: f32 = 16.0;
+pub const TILE_MAX_HEIGHT: f32 = 15.0;
+pub const TILE_TILES_COLUMN_SIZE: u32 = 16;
 
+const TT: f32 = 8.0;
+const TS: f32 = 16.0;
+const TM: f32 = 24.0;
+const TB: f32 = 32.0;
 pub static ENTITIES_DIM: &[(f32, f32, f32, f32)] = &[
     // 1
     (0., 0., TS, TS),
