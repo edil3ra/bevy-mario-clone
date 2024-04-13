@@ -21,7 +21,7 @@ impl PluginGroup for DebugPlugins {
 
 fn toggle_fullscreen(
     mut game_resource: ResMut<Game>,
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
     mut windows: Query<&mut Window>,
 ) {
     let mut window = windows.single_mut();
@@ -32,29 +32,29 @@ fn toggle_fullscreen(
 }
 
 fn move_camera(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Transform, With<Camera2d>>,
 ) {
     let mut transform = query.get_single_mut().unwrap();
-    if keyboard_input.pressed(KeyCode::G) {
+    if keyboard_input.pressed(KeyCode::KeyG) {
         transform.translation.x += -10.0;
     }
 
-    if keyboard_input.pressed(KeyCode::C) {
+    if keyboard_input.pressed(KeyCode::KeyC) {
         transform.translation.x += 10.0;
     }
 
-    if keyboard_input.pressed(KeyCode::R) {
+    if keyboard_input.pressed(KeyCode::KeyR) {
         transform.translation.y += 10.0;
     }
 
-    if keyboard_input.pressed(KeyCode::L) {
+    if keyboard_input.pressed(KeyCode::KeyL) {
         transform.translation.y += -10.0;
     }
 
-    if keyboard_input.pressed(KeyCode::Plus) {
-        transform.scale *= 0.8;
-    }
+    // if keyboard_input.pressed(KeyCode::) {
+    //     transform.scale *= 0.8;
+    // }
 
     if keyboard_input.pressed(KeyCode::Minus) {
         transform.scale *= 1.2;

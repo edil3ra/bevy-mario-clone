@@ -1,12 +1,24 @@
-use bevy::{app::PluginGroupBuilder, prelude::*};
-use bevy_ecs_tilemap::{
-    prelude::{
-        get_tilemap_center_transform, TilemapId, TilemapSize, TilemapTexture, TilemapTileSize,
-        TilemapType,
+use bevy::{
+    app::{App, Plugin, PluginGroup, PluginGroupBuilder},
+    core::Name,
+    ecs::{
+        schedule::OnEnter,
+        system::{Commands, Res},
     },
-    tiles::{TileBundle, TilePos, TileStorage, TileTextureIndex},
-    TilemapBundle, TilemapPlugin,
+    hierarchy::BuildChildren,
+    prelude::SpatialBundle,
+    transform::components::Transform,
 };
+// use bevy_ecs_tilemap::{
+//     prelude::{
+//         get_tilemap_center_transform, TilemapId, TilemapSize, TilemapTexture, TilemapTileSize,
+//         TilemapType,
+//     },
+//     tiles::{TileBundle, TilePos, TileStorage, TileTextureIndex},
+//     TilemapBundle, TilemapPlugin,
+// };
+
+use bevy_ecs_tilemap::prelude::*;
 
 use crate::{config, level, AppState, Game};
 
@@ -22,24 +34,25 @@ pub struct TileFactory {
 #[derive(Debug, Default)]
 pub struct TileChangable {
     toName: String,
-    counter: Option<u32>
+    counter: Option<u32>,
 }
-
 
 #[derive(Debug)]
 pub enum TileType {
-    Fixed {
-        texture_index: u32,
-    },
-    Animated {
-        texture_indexes: Vec<u32>,
-    },
+    Fixed { texture_index: u32 },
+    Animated { texture_indexes: Vec<u32> },
 }
-
 
 impl Default for TileType {
     fn default() -> Self {
         TileType::Fixed { texture_index: (0) }
+    }
+}
+
+pub struct MapPlugin {}
+impl Plugin for MapPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(AppState::InGame), build_map);
     }
 }
 
@@ -49,13 +62,6 @@ impl PluginGroup for MapPlugins {
         PluginGroupBuilder::start::<Self>()
             .add(TilemapPlugin)
             .add(MapPlugin {})
-    }
-}
-
-pub struct MapPlugin {}
-impl Plugin for MapPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InGame), build_map);
     }
 }
 
@@ -94,8 +100,8 @@ fn build_map(mut commands: Commands, game_resource: Res<Game>) {
                 .unwrap();
 
             let texture_index = match &tile_template.tileType {
-                TileType::Fixed { texture_index } => *texture_index ,
-                TileType::Animated { texture_indexes } => texture_indexes[0]
+                TileType::Fixed { texture_index } => *texture_index,
+                TileType::Animated { texture_indexes } => texture_indexes[0],
             };
 
             let tile_entity = commands

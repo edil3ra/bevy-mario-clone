@@ -13,7 +13,7 @@ struct Player;
 #[derive(Debug, Default)]
 pub struct AssetsHandle {
     tiles_image: Handle<Image>,
-    sprites_texture_atlas: Handle<TextureAtlas>,
+    sprites_texture_atlas: Handle<TextureAtlasLayout>,
 }
 
 #[derive(Debug, Default, Resource)]
@@ -33,7 +33,7 @@ pub enum AppState {
 
 fn main() {
     App::new()
-        .add_state::<AppState>()
+        .init_state::<AppState>()
         .insert_resource(Game {
             level: level::Level {
                 current: 0,
@@ -44,7 +44,7 @@ fn main() {
                     '0',
                     TileFactory {
                         name: String::from("unkown_for_now"),
-                        tileType: TileType::Fixed {texture_index: 100},
+                        tileType: TileType::Fixed { texture_index: 100 },
                         ..Default::default()
                     },
                 ),
@@ -52,7 +52,7 @@ fn main() {
                     '1',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 2},
+                        tileType: TileType::Fixed { texture_index: 2 },
                         ..Default::default()
                     },
                 ),
@@ -60,7 +60,7 @@ fn main() {
                     '2',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 3},
+                        tileType: TileType::Fixed { texture_index: 3 },
                         ..Default::default()
                     },
                 ),
@@ -68,7 +68,7 @@ fn main() {
                     '3',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 4},
+                        tileType: TileType::Fixed { texture_index: 4 },
                         ..Default::default()
                     },
                 ),
@@ -76,7 +76,7 @@ fn main() {
                     '4',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 5},
+                        tileType: TileType::Fixed { texture_index: 5 },
                         ..Default::default()
                     },
                 ),
@@ -84,7 +84,7 @@ fn main() {
                     '5',
                     TileFactory {
                         name: String::from("removable_block"),
-                        tileType: TileType::Fixed {texture_index: 1},
+                        tileType: TileType::Fixed { texture_index: 1 },
                         ..Default::default()
                     },
                 ),
@@ -92,7 +92,7 @@ fn main() {
                     '6',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 7},
+                        tileType: TileType::Fixed { texture_index: 7 },
                         ..Default::default()
                     },
                 ),
@@ -100,7 +100,7 @@ fn main() {
                     '7',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 8},
+                        tileType: TileType::Fixed { texture_index: 8 },
                         ..Default::default()
                     },
                 ),
@@ -108,7 +108,7 @@ fn main() {
                     '8',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 9},
+                        tileType: TileType::Fixed { texture_index: 9 },
                         ..Default::default()
                     },
                 ),
@@ -116,7 +116,7 @@ fn main() {
                     '9',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 10},
+                        tileType: TileType::Fixed { texture_index: 10 },
                         ..Default::default()
                     },
                 ),
@@ -124,7 +124,7 @@ fn main() {
                     ':',
                     TileFactory {
                         name: String::from("hard_block_brown"),
-                        tileType: TileType::Fixed {texture_index: 0},
+                        tileType: TileType::Fixed { texture_index: 0 },
                         ..Default::default()
                     },
                 ),
@@ -132,7 +132,7 @@ fn main() {
                     ';',
                     TileFactory {
                         name: String::from("hard_block_brown"),
-                        tileType: TileType::Fixed {texture_index: 0},
+                        tileType: TileType::Fixed { texture_index: 0 },
                         ..Default::default()
                     },
                 ),
@@ -140,7 +140,7 @@ fn main() {
                     '<',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 13},
+                        tileType: TileType::Fixed { texture_index: 13 },
                         ..Default::default()
                     },
                 ),
@@ -148,7 +148,7 @@ fn main() {
                     '=',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 14},
+                        tileType: TileType::Fixed { texture_index: 14 },
                         ..Default::default()
                     },
                 ),
@@ -156,7 +156,7 @@ fn main() {
                     '>',
                     TileFactory {
                         name: String::from("interogation_block"),
-                        tileType: TileType::Fixed {texture_index: 4},
+                        tileType: TileType::Fixed { texture_index: 4 },
                         ..Default::default()
                     },
                 ),
@@ -164,7 +164,7 @@ fn main() {
                     '?',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 16},
+                        tileType: TileType::Fixed { texture_index: 16 },
                         ..Default::default()
                     },
                 ),
@@ -172,7 +172,7 @@ fn main() {
                     '@',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 17},
+                        tileType: TileType::Fixed { texture_index: 17 },
                         ..Default::default()
                     },
                 ),
@@ -180,7 +180,7 @@ fn main() {
                     'A',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 18},
+                        tileType: TileType::Fixed { texture_index: 18 },
                         ..Default::default()
                     },
                 ),
@@ -188,7 +188,7 @@ fn main() {
                     'B',
                     TileFactory {
                         name: String::from("name"),
-                        tileType: TileType::Fixed {texture_index: 19},
+                        tileType: TileType::Fixed { texture_index: 19 },
                         ..Default::default()
                     },
                 ),
@@ -196,7 +196,9 @@ fn main() {
                     'C',
                     TileFactory {
                         name: String::from("sky"),
-                        tileType: TileType::Fixed {texture_index: 7 * config::TILE_TILES_COLUMN_SIZE + 9},
+                        tileType: TileType::Fixed {
+                            texture_index: 7 * config::TILE_TILES_COLUMN_SIZE + 9,
+                        },
                         ..Default::default()
                     },
                 ),
@@ -204,15 +206,17 @@ fn main() {
             ..Default::default()
         })
         .add_plugins((
-            DefaultPlugins.set(WindowPlugin {
-                primary_window: Some(Window {
-                    resolution: (config::WINDOW_WIDTH, config::WINDOW_HEIGHT).into(),
-                    mode: bevy::window::WindowMode::BorderlessFullscreen,
-                    title: "Mario".into(),
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        resolution: (config::WINDOW_WIDTH, config::WINDOW_HEIGHT).into(),
+                        mode: bevy::window::WindowMode::BorderlessFullscreen,
+                        title: "Mario".into(),
+                        ..default()
+                    }),
                     ..default()
-                }),
-                ..default()
-            }),
+                })
+                .set(ImagePlugin::default_nearest()),
             MapPlugins {},
             DebugPlugins {},
         ))
@@ -228,12 +232,13 @@ fn main() {
 fn load_assets(
     mut game_res: ResMut<Game>,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-    let sprites_texture_handle = asset_server.load("textures/sprites.png");
+    let _sprites_texture_handle: Handle<Image> = asset_server.load("textures/sprites.png");
+    
     let mut sprites_texture_atlas =
-        TextureAtlas::new_empty(sprites_texture_handle, Vec2::new(29.0 * 8.0, 29.0 * 8.0));
+        TextureAtlasLayout::new_empty(Vec2::new(29.0 * 8.0, 29.0 * 8.0));
 
     for sprite_dim in config::ENTITIES_DIM {
         sprites_texture_atlas.add_texture(Rect::new(
@@ -256,7 +261,6 @@ fn load_assets(
 
 fn spawn_camera(mut commands: Commands) {
     let scale_factor = config::WINDOW_HEIGHT / config::TILE_SIZE / config::TILE_MAX_HEIGHT;
-    println!("{:?}", scale_factor);
     commands.spawn(Camera2dBundle {
         transform: Transform {
             translation: Vec3::new(
@@ -280,9 +284,12 @@ fn spawn_camera(mut commands: Commands) {
 fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
     commands.spawn((
         SpriteSheetBundle {
-            texture_atlas: game_resource.assets.sprites_texture_atlas.clone(),
+            texture: game_resource.assets.tiles_image.clone(),
+            atlas: TextureAtlas {
+                layout: game_resource.assets.sprites_texture_atlas.clone(),
+                index: config::EntityTile::MarioSmallIdle as usize,
+            },
             transform: Transform::from_xyz(32., 32., 1.0),
-            sprite: TextureAtlasSprite::new(config::EntityTile::MarioSmallIdle as usize),
             ..default()
         },
         Name::new("mario"),
@@ -290,10 +297,10 @@ fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
     ));
 }
 
-fn mario_controller(keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.pressed(KeyCode::Left) {
+fn mario_controller(keyboard_input: Res<ButtonInput<KeyCode>>) {
+    if keyboard_input.pressed(KeyCode::ArrowLeft) {
         info!("left");
-    } else if keyboard_input.pressed(KeyCode::Right) {
+    } else if keyboard_input.pressed(KeyCode::ArrowRight) {
         info!("right");
     }
     if keyboard_input.pressed(KeyCode::Space) {
