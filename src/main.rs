@@ -3,6 +3,7 @@ mod debug;
 mod level;
 mod map;
 use bevy::prelude::*;
+
 use debug::DebugPlugins;
 use map::{MapPlugins, TileFactory, TileType};
 use std::collections::HashMap;
@@ -32,9 +33,36 @@ pub enum AppState {
     InGame,
 }
 
+#[derive(Reflect, Debug)]
+pub enum Movement {
+    Idle,
+    Left,
+    Right
+}
+
+impl Default for Movement {
+    fn default() -> Self {
+        Self::Idle
+    }
+}
+
+#[derive(Debug, Default, Component, Reflect)]
+#[reflect(Component)]
+struct Action {
+    displace: Movement,
+    jump: bool,
+}
+impl Action {
+    fn reset(&mut self) {
+        self.displace = Movement::default();
+        self.jump = false;
+    }
+}
+
 fn main() {
     App::new()
         .init_state::<AppState>()
+        .register_type::<Action>()
         .insert_resource(Game {
             level: level::Level {
                 current: 0,
@@ -237,7 +265,7 @@ fn load_assets(
     mut next_state: ResMut<NextState<AppState>>,
 ) {
     let sprites_texture_handle: Handle<Image> = asset_server.load("textures/entities.png");
-    
+
     let mut sprites_texture_atlas =
         TextureAtlasLayout::new_empty(Vec2::new(32.0 * 8.0, 32.0 * 8.0));
 
@@ -291,17 +319,29 @@ fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
             ..default()
         },
         Name::new("mario"),
+        Action {
+            displace: Movement::Idle,
+            jump: false,
+        },
         Player,
     ));
 }
 
-fn mario_controller(keyboard_input: Res<ButtonInput<KeyCode>>) {
-    if keyboard_input.pressed(KeyCode::ArrowLeft) {
-        info!("left");
+fn mario_controller(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut action_query: Query<&mut Action, With<Player>>,
+) {
+    let mut action = action_query.get_single_mut().unwrap();
+    action.reset();
+
+    if keyboard_input.pressed(KeyCode::ArrowLeft) && keyboard_input.pressed(KeyCode::ArrowLeft) {
+        action.displace = Movement::Idle;
+    } else if keyboard_input.pressed(KeyCode::ArrowLeft) {
+        action.displace = Movement::Left;
     } else if keyboard_input.pressed(KeyCode::ArrowRight) {
-        info!("right");
+        action.displace = Movement::Right;
     }
     if keyboard_input.pressed(KeyCode::Space) {
-        info!("jump");
+        action.jump = true
     }
 }
