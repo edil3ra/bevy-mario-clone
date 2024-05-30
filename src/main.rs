@@ -13,7 +13,8 @@ struct Player;
 #[derive(Debug, Default)]
 pub struct AssetsHandle {
     tiles_image: Handle<Image>,
-    sprites_texture_atlas: Handle<TextureAtlasLayout>,
+    entities_image: Handle<Image>,
+    entities_texture_atlas: Handle<TextureAtlasLayout>,
 }
 
 #[derive(Debug, Default, Resource)]
@@ -210,7 +211,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         resolution: (config::WINDOW_WIDTH, config::WINDOW_HEIGHT).into(),
-                        mode: bevy::window::WindowMode::BorderlessFullscreen,
+                        mode: bevy::window::WindowMode::Windowed,
                         title: "Mario".into(),
                         ..default()
                     }),
@@ -235,10 +236,10 @@ fn load_assets(
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-    let _sprites_texture_handle: Handle<Image> = asset_server.load("textures/sprites.png");
+    let sprites_texture_handle: Handle<Image> = asset_server.load("textures/entities.png");
     
     let mut sprites_texture_atlas =
-        TextureAtlasLayout::new_empty(Vec2::new(29.0 * 8.0, 29.0 * 8.0));
+        TextureAtlasLayout::new_empty(Vec2::new(32.0 * 8.0, 32.0 * 8.0));
 
     for sprite_dim in config::ENTITIES_DIM {
         sprites_texture_atlas.add_texture(Rect::new(
@@ -250,11 +251,11 @@ fn load_assets(
     }
 
     let sprites_texture_atlas_handle = texture_atlases.add(sprites_texture_atlas.clone());
-
     let tiles_texture_handle = asset_server.load("textures/tiles.png");
 
     game_res.assets.tiles_image = tiles_texture_handle;
-    game_res.assets.sprites_texture_atlas = sprites_texture_atlas_handle;
+    game_res.assets.entities_image = sprites_texture_handle;
+    game_res.assets.entities_texture_atlas = sprites_texture_atlas_handle;
 
     next_state.set(AppState::InGame);
 }
@@ -264,11 +265,8 @@ fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         transform: Transform {
             translation: Vec3::new(
-                // -config::TILE_SIZE / 2.0 + config::WINDOW_WIDTH / 2.0,
-                // -config::TILE_SIZE / 2.0 + config::WINDOW_HEIGHT / 2.0,
                 (config::WINDOW_WIDTH - config::TILE_SIZE) / scale_factor / 2.0,
                 (config::WINDOW_HEIGHT - config::TILE_SIZE) / scale_factor / 2.0,
-                // config::WINDOW_HEIGHT / 2.0 * scale_factor,
                 1.0,
             ),
             scale: Vec3::new(1.0 / scale_factor, 1.0 / scale_factor, 2.0),
@@ -284,9 +282,9 @@ fn spawn_camera(mut commands: Commands) {
 fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
     commands.spawn((
         SpriteSheetBundle {
-            texture: game_resource.assets.tiles_image.clone(),
+            texture: game_resource.assets.entities_image.clone(),
             atlas: TextureAtlas {
-                layout: game_resource.assets.sprites_texture_atlas.clone(),
+                layout: game_resource.assets.entities_texture_atlas.clone(),
                 index: config::EntityTile::MarioSmallIdle as usize,
             },
             transform: Transform::from_xyz(32., 32., 1.0),

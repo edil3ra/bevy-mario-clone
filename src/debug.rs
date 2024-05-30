@@ -52,11 +52,11 @@ fn move_camera(
         transform.translation.y += -10.0;
     }
 
-    // if keyboard_input.pressed(KeyCode::) {
-    //     transform.scale *= 0.8;
-    // }
+    if keyboard_input.pressed(KeyCode::Digit1) {
+        transform.scale *= 0.8;
+    }
 
-    if keyboard_input.pressed(KeyCode::Minus) {
+    if keyboard_input.pressed(KeyCode::Digit2) {
         transform.scale *= 1.2;
     }
 }
