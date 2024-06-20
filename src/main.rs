@@ -34,13 +34,24 @@ pub enum AppState {
 }
 
 #[derive(Reflect, Debug)]
-pub enum Movement {
+pub enum Direction {
     Idle,
     Left,
-    Right
+    Right,
 }
 
-impl Default for Movement {
+#[derive(Reflect, Default, Debug, Component)]
+#[reflect(Component)]
+pub struct Physics {
+    force: Vec2,
+    mass: f32,
+    acceleration: Vec2,
+    velocity: Vec2,
+    position: Vec2,
+    is_ground: bool,
+}
+
+impl Default for Direction {
     fn default() -> Self {
         Self::Idle
     }
@@ -48,13 +59,13 @@ impl Default for Movement {
 
 #[derive(Debug, Default, Component, Reflect)]
 #[reflect(Component)]
-struct Action {
-    displace: Movement,
+struct Intention {
+    direction: Direction,
     jump: bool,
 }
-impl Action {
+impl Intention {
     fn reset(&mut self) {
-        self.displace = Movement::default();
+        self.direction = Direction::default();
         self.jump = false;
     }
 }
@@ -62,7 +73,8 @@ impl Action {
 fn main() {
     App::new()
         .init_state::<AppState>()
-        .register_type::<Action>()
+        .register_type::<Intention>()
+        .register_type::<Physics>()
         .insert_resource(Game {
             level: level::Level {
                 current: 0,
@@ -253,7 +265,15 @@ fn main() {
         .add_systems(OnEnter(AppState::InGame), (spawn_camera, spawn_mario))
         .add_systems(
             Update,
-            (mario_controller).run_if(in_state(AppState::InGame)),
+            (
+                mario_controller,
+                update_net_force,
+                update_acceleration,
+                update_velocity,
+                update_position,
+                sync_physics,
+            )
+                .run_if(in_state(AppState::InGame)),
         )
         .run();
 }
@@ -308,6 +328,7 @@ fn spawn_camera(mut commands: Commands) {
 }
 
 fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
+    let init_position = Vec2::new(32.0, 32.0);
     commands.spawn((
         SpriteSheetBundle {
             texture: game_resource.assets.entities_image.clone(),
@@ -315,33 +336,91 @@ fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
                 layout: game_resource.assets.entities_texture_atlas.clone(),
                 index: config::EntityTile::MarioSmallIdle as usize,
             },
-            transform: Transform::from_xyz(32., 32., 1.0),
+            transform: Transform::from_xyz(init_position.x, init_position.y, 1.0),
             ..default()
         },
         Name::new("mario"),
-        Action {
-            displace: Movement::Idle,
+        Player,
+        Intention {
+            direction: Direction::Idle,
             jump: false,
         },
-        Player,
+        Physics {
+            position: init_position,
+            is_ground: true,
+            mass: 1.0,
+            ..Default::default()
+        },
     ));
+}
+
+fn update_net_force(mut query: Query<(&mut Physics, &Intention)>) {
+    let mut net_force = Vec2::new(0.0, 0.0);
+    for (mut physics, intention) in &mut query {
+        let velocity = physics.velocity;
+        if physics.is_ground {
+            match intention.direction {
+                Direction::Idle => net_force += Vec2::ZERO,
+                Direction::Left => net_force += Vec2::new(-60.0, 0.0),
+                Direction::Right => net_force += Vec2::new(60.0, 0.0),
+            }
+        }
+        if intention.jump && physics.is_ground {
+            net_force += Vec2::new(0.0, 120.0);
+        }
+        physics.force = net_force
+    }
+}
+
+fn update_acceleration(mut last_time: Local<f32>, time: Res<Time>, mut query: Query<&mut Physics>) {
+    let dt = time.elapsed_seconds() - *last_time;
+    for mut physics in &mut query {
+        let force = physics.force;
+        let mass = physics.mass;
+        physics.acceleration += force / mass * dt
+    }
+    *last_time = time.elapsed_seconds();
+}
+
+fn update_velocity(mut last_time: Local<f32>, time: Res<Time>, mut query: Query<&mut Physics>) {
+    let dt = time.elapsed_seconds() - *last_time;
+    for mut physics in &mut query {
+        let acceleration = physics.acceleration;
+        physics.velocity += acceleration * dt;
+    }
+    *last_time = time.elapsed_seconds();
+}
+
+fn update_position(mut last_time: Local<f32>, time: Res<Time>, mut query: Query<&mut Physics>) {
+    let dt = time.elapsed_seconds() - *last_time;
+    for mut physics in &mut query {
+        let velocity = physics.velocity;
+        physics.position += velocity * dt;
+    }
+    *last_time = time.elapsed_seconds();
+}
+
+fn sync_physics(mut query: Query<(&mut Physics, &mut Transform)>) {
+    for (physics, mut transform) in &mut query {
+        transform.translation = Vec3::new(physics.position.x, physics.position.y, 1.0);
+    }
 }
 
 fn mario_controller(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut action_query: Query<&mut Action, With<Player>>,
+    mut action_query: Query<&mut Intention, With<Player>>,
 ) {
-    let mut action = action_query.get_single_mut().unwrap();
-    action.reset();
+    let mut intention = action_query.get_single_mut().unwrap();
+    intention.reset();
 
-    if keyboard_input.pressed(KeyCode::ArrowLeft) && keyboard_input.pressed(KeyCode::ArrowLeft) {
-        action.displace = Movement::Idle;
+    if keyboard_input.pressed(KeyCode::ArrowLeft) && keyboard_input.pressed(KeyCode::ArrowRight) {
+        intention.direction = Direction::Idle;
     } else if keyboard_input.pressed(KeyCode::ArrowLeft) {
-        action.displace = Movement::Left;
+        intention.direction = Direction::Left;
     } else if keyboard_input.pressed(KeyCode::ArrowRight) {
-        action.displace = Movement::Right;
+        intention.direction = Direction::Right;
     }
     if keyboard_input.pressed(KeyCode::Space) {
-        action.jump = true
+        intention.jump = true
     }
 }
