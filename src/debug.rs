@@ -1,6 +1,7 @@
 use crate::Game;
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::{app::PluginGroupBuilder, prelude::*};
+use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 struct InputPlugin;
@@ -15,7 +16,9 @@ impl PluginGroup for DebugPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(InputPlugin)
-            .add(WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)))
+            // .add(DefaultPlugins)
+            // .add(EguiPlugin)
+            // .add(WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)))
     }
 }
 

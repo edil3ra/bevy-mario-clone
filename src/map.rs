@@ -2,11 +2,10 @@ use bevy::{
     app::{App, Plugin, PluginGroup, PluginGroupBuilder},
     core::Name,
     ecs::{
-        schedule::OnEnter,
         system::{Commands, Res},
     },
     hierarchy::BuildChildren,
-    prelude::SpatialBundle,
+    prelude::*,
     transform::components::Transform,
 };
 // use bevy_ecs_tilemap::{

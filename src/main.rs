@@ -2,10 +2,14 @@ mod config;
 mod debug;
 mod level;
 mod map;
+use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
+use bevy::asset::{Asset};
 
+use bevy_common_assets::json::JsonAssetPlugin;
 use debug::DebugPlugins;
 use map::{MapPlugins, TileFactory, TileType};
+use serde::Deserialize;
 use std::collections::HashMap;
 
 #[derive(Component)]
@@ -70,8 +74,58 @@ impl Intention {
     }
 }
 
+// #[serde(rename_all = "camelCase")]
+#[derive(Deserialize, Asset, TypePath)]
+struct Level {
+    sprite_sheet: String,
+    pattern_sheet: String,
+    music_sheet: String,
+    check_points: [u32; 2],
+    layers: Vec<LevelLayer>,
+}
+
+#[derive(serde::Deserialize, TypePath)]
+#[serde(rename_all = "camelCase")]
+struct LevelLayer {
+    tiles: Vec<LevelTile>,
+    entities: Vec<LevelEntity>,
+    triggers: Vec<u32>,
+}
+
+#[derive(serde::Deserialize, TypePath)]
+#[serde(rename_all = "camelCase")]
+struct LevelTile {
+    style: Option<String>,
+    pattern: Option<String>,
+    behavior: Option<String>,
+    ranges: Vec<u32>,
+}
+
+#[derive(serde::Deserialize, TypePath)]
+#[serde(rename_all = "camelCase")]
+struct LevelEntity {
+    name: String,
+    pos: [u32; 2],
+}
+
 fn main() {
     App::new()
+        .add_plugins((
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        resolution: (config::WINDOW_WIDTH, config::WINDOW_HEIGHT).into(),
+                        mode: bevy::window::WindowMode::Windowed,
+                        title: "Mario".into(),
+                        ..default()
+                    }),
+                    ..default()
+                })
+                .set(ImagePlugin::default_nearest()),
+            JsonAssetPlugin::<Level>::new(&["levels/1-1.json"]),
+            MapPlugins {},
+            DebugPlugins {},
+        ))
         .init_state::<AppState>()
         .register_type::<Intention>()
         .register_type::<Physics>()
@@ -246,27 +300,12 @@ fn main() {
             ]),
             ..Default::default()
         })
-        .add_plugins((
-            DefaultPlugins
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        resolution: (config::WINDOW_WIDTH, config::WINDOW_HEIGHT).into(),
-                        mode: bevy::window::WindowMode::Windowed,
-                        title: "Mario".into(),
-                        ..default()
-                    }),
-                    ..default()
-                })
-                .set(ImagePlugin::default_nearest()),
-            MapPlugins {},
-            DebugPlugins {},
-        ))
         .add_systems(Startup, load_assets)
         .add_systems(OnEnter(AppState::InGame), (spawn_camera, spawn_mario))
         .add_systems(
             Update,
             (
-                mario_controller,
+                // mario_controller,
                 update_net_force,
                 update_acceleration,
                 update_velocity,
@@ -287,10 +326,10 @@ fn load_assets(
     let sprites_texture_handle: Handle<Image> = asset_server.load("textures/entities.png");
 
     let mut sprites_texture_atlas =
-        TextureAtlasLayout::new_empty(Vec2::new(32.0 * 8.0, 32.0 * 8.0));
+        TextureAtlasLayout::new_empty(UVec2::new(32 * 8, 32 * 8));
 
     for sprite_dim in config::ENTITIES_DIM {
-        sprites_texture_atlas.add_texture(Rect::new(
+        sprites_texture_atlas.add_texture(URect::new(
             sprite_dim.0,
             sprite_dim.1,
             sprite_dim.2 + sprite_dim.0,
