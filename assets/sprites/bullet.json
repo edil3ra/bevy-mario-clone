@@ -1,0 +1,10 @@
+{
+    "imageURL": "/img/sprites.png",
+
+    "frames": [
+        {
+            "name": "bullet",
+            "rect": [128, 0, 16, 16]
+        }
+    ]
+}
