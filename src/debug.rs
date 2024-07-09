@@ -16,9 +16,7 @@ impl PluginGroup for DebugPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(InputPlugin)
-            // .add(DefaultPlugins)
-            // .add(EguiPlugin)
-            // .add(WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)))
+            .add(WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)))
     }
 }
 

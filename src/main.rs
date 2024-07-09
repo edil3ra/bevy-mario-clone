@@ -305,7 +305,7 @@ fn main() {
         .add_systems(
             Update,
             (
-                // mario_controller,
+                mario_controller,
                 update_net_force,
                 update_acceleration,
                 update_velocity,
@@ -352,8 +352,8 @@ fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         transform: Transform {
             translation: Vec3::new(
-                (config::WINDOW_WIDTH - config::TILE_SIZE) / scale_factor / 2.0,
-                (config::WINDOW_HEIGHT - config::TILE_SIZE) / scale_factor / 2.0,
+                (config::WINDOW_WIDTH - config::TILE_SIZE) / scale_factor / 2.0 - (config::TILE_SIZE / 2.0),
+                (config::WINDOW_HEIGHT - config::TILE_SIZE) / scale_factor / 2.0 - (config::TILE_SIZE / 2.0),
                 1.0,
             ),
             scale: Vec3::new(1.0 / scale_factor, 1.0 / scale_factor, 2.0),

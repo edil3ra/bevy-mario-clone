@@ -15,6 +15,6 @@ opt-level = 3
 bevy = { version = "0.14.0", features = ["dynamic_linking"] }
 bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap" }
 bevy_egui = "0.27.1"
-bevy-inspector-egui = "0.24.0"
+bevy-inspector-egui = "0.25.0"
 bevy_common_assets = {version = "0.11.0", features = ["json"]}
 serde = "1.0"
