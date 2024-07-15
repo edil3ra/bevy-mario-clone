@@ -2,15 +2,17 @@ mod config;
 mod debug;
 mod level;
 mod map;
+use bevy::asset::Asset;
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
-use bevy::asset::{Asset};
 
 use bevy_common_assets::json::JsonAssetPlugin;
 use debug::DebugPlugins;
 use map::{MapPlugins, TileFactory, TileType};
 use serde::Deserialize;
+use std::cmp::min;
 use std::collections::HashMap;
+use std::ops::Add;
 
 #[derive(Component)]
 struct Player;
@@ -47,12 +49,10 @@ pub enum Direction {
 #[derive(Reflect, Default, Debug, Component)]
 #[reflect(Component)]
 pub struct Physics {
-    force: Vec2,
-    mass: f32,
-    acceleration: Vec2,
-    velocity: Vec2,
-    position: Vec2,
-    is_ground: bool,
+    acceleration: Vec3,
+    velocity: Vec3,
+    // position: Vec2,
+    // is_ground: bool,
 }
 
 impl Default for Direction {
@@ -74,8 +74,8 @@ impl Intention {
     }
 }
 
-// #[serde(rename_all = "camelCase")]
 #[derive(Deserialize, Asset, TypePath)]
+#[serde(rename_all = "camelCase")]
 struct Level {
     sprite_sheet: String,
     pattern_sheet: String,
@@ -305,12 +305,9 @@ fn main() {
         .add_systems(
             Update,
             (
-                mario_controller,
-                update_net_force,
-                update_acceleration,
-                update_velocity,
-                update_position,
-                sync_physics,
+                sync_player_intention_with_input,
+                update_player,
+                update_physics,
             )
                 .run_if(in_state(AppState::InGame)),
         )
@@ -325,8 +322,7 @@ fn load_assets(
 ) {
     let sprites_texture_handle: Handle<Image> = asset_server.load("textures/entities.png");
 
-    let mut sprites_texture_atlas =
-        TextureAtlasLayout::new_empty(UVec2::new(32 * 8, 32 * 8));
+    let mut sprites_texture_atlas = TextureAtlasLayout::new_empty(UVec2::new(32 * 8, 32 * 8));
 
     for sprite_dim in config::ENTITIES_DIM {
         sprites_texture_atlas.add_texture(URect::new(
@@ -352,8 +348,10 @@ fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         transform: Transform {
             translation: Vec3::new(
-                (config::WINDOW_WIDTH - config::TILE_SIZE) / scale_factor / 2.0 - (config::TILE_SIZE / 2.0),
-                (config::WINDOW_HEIGHT - config::TILE_SIZE) / scale_factor / 2.0 - (config::TILE_SIZE / 2.0),
+                (config::WINDOW_WIDTH - config::TILE_SIZE) / scale_factor / 2.0
+                    - (config::TILE_SIZE / 2.0),
+                (config::WINDOW_HEIGHT - config::TILE_SIZE) / scale_factor / 2.0
+                    - (config::TILE_SIZE / 2.0),
                 1.0,
             ),
             scale: Vec3::new(1.0 / scale_factor, 1.0 / scale_factor, 2.0),
@@ -385,67 +383,59 @@ fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
             jump: false,
         },
         Physics {
-            position: init_position,
-            is_ground: true,
-            mass: 1.0,
             ..Default::default()
         },
     ));
 }
 
-fn update_net_force(mut query: Query<(&mut Physics, &Intention)>) {
-    let mut net_force = Vec2::new(0.0, 0.0);
+fn update_player(
+    time: Res<Time>,
+    mut query: Query<(&mut Physics, &Intention), With<Player>>,
+) {
+    let dt = time.delta().as_secs_f32();
     for (mut physics, intention) in &mut query {
-        let velocity = physics.velocity;
-        if physics.is_ground {
-            match intention.direction {
-                Direction::Idle => net_force += Vec2::ZERO,
-                Direction::Left => net_force += Vec2::new(-60.0, 0.0),
-                Direction::Right => net_force += Vec2::new(60.0, 0.0),
+        let abs_x = physics.velocity.x.abs();
+        let mut distance = 0.0; // will be used later
+        let direction = match intention.direction {
+            Direction::Idle => 0,
+            Direction::Left => -1,
+            Direction::Right => 1,
+        };
+
+        if direction == 0 {
+            if physics.velocity.x != 0.0 {
+                let decel = abs_x.min(300.0 * dt);
+                if physics.velocity.x > 0.0 {
+                    physics.velocity.x -= decel;
+                } else {
+                    physics.velocity.x += decel;
+                }
+            } else {
+                distance = 0.0;
             }
+        } else {
+            physics.velocity.x += 400.0 * direction as f32 * dt;
         }
-        if intention.jump && physics.is_ground {
-            net_force += Vec2::new(0.0, 120.0);
-        }
-        physics.force = net_force
+        let drag = 1.0 / 5000.0 * physics.velocity.x * abs_x;
+        physics.velocity.x -= drag;
+        distance = abs_x * dt;
     }
 }
 
-fn update_acceleration(mut last_time: Local<f32>, time: Res<Time>, mut query: Query<&mut Physics>) {
+
+fn update_physics(
+    mut last_time: Local<f32>,
+    time: Res<Time>,
+    mut query: Query<(&mut Physics, &mut Transform)>,
+) {
     let dt = time.elapsed_seconds() - *last_time;
-    for mut physics in &mut query {
-        let force = physics.force;
-        let mass = physics.mass;
-        physics.acceleration += force / mass * dt
-    }
-    *last_time = time.elapsed_seconds();
-}
-
-fn update_velocity(mut last_time: Local<f32>, time: Res<Time>, mut query: Query<&mut Physics>) {
-    let dt = time.elapsed_seconds() - *last_time;
-    for mut physics in &mut query {
-        let acceleration = physics.acceleration;
-        physics.velocity += acceleration * dt;
-    }
-    *last_time = time.elapsed_seconds();
-}
-
-fn update_position(mut last_time: Local<f32>, time: Res<Time>, mut query: Query<&mut Physics>) {
-    let dt = time.elapsed_seconds() - *last_time;
-    for mut physics in &mut query {
-        let velocity = physics.velocity;
-        physics.position += velocity * dt;
-    }
-    *last_time = time.elapsed_seconds();
-}
-
-fn sync_physics(mut query: Query<(&mut Physics, &mut Transform)>) {
     for (physics, mut transform) in &mut query {
-        transform.translation = Vec3::new(physics.position.x, physics.position.y, 1.0);
+        transform.translation = transform.translation.add(physics.velocity * dt);
     }
+    *last_time = time.elapsed_seconds();
 }
 
-fn mario_controller(
+fn sync_player_intention_with_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut action_query: Query<&mut Intention, With<Player>>,
 ) {

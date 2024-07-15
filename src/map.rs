@@ -1,9 +1,7 @@
 use bevy::{
     app::{App, Plugin, PluginGroup, PluginGroupBuilder},
     core::Name,
-    ecs::{
-        system::{Commands, Res},
-    },
+    ecs::system::{Commands, Res},
     hierarchy::BuildChildren,
     prelude::*,
     transform::components::Transform,
