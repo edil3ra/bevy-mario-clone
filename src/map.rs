@@ -6,15 +6,6 @@ use bevy::{
     prelude::*,
     transform::components::Transform,
 };
-// use bevy_ecs_tilemap::{
-//     prelude::{
-//         get_tilemap_center_transform, TilemapId, TilemapSize, TilemapTexture, TilemapTileSize,
-//         TilemapType,
-//     },
-//     tiles::{TileBundle, TilePos, TileStorage, TileTextureIndex},
-//     TilemapBundle, TilemapPlugin,
-// };
-
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::{config, level, AppState, Game};
@@ -64,7 +55,7 @@ impl PluginGroup for MapPlugins {
 
 fn build_map(mut commands: Commands, game_resource: Res<Game>) {
     let current_level = level::LevelFile::new(config::LEVELS[game_resource.level.current]);
-    let texture_handle = game_resource.assets.tiles_image.clone();
+    let texture_handle = game_resource.assets.texture_entities.clone();
 
     let map_size = TilemapSize {
         x: current_level.n_columns as u32,

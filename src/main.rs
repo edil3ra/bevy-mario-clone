@@ -19,10 +19,18 @@ struct Player;
 
 #[derive(Debug, Default)]
 pub struct AssetsHandle {
-    tiles_image: Handle<Image>,
-    entities_image: Handle<Image>,
+    texture_entities: Handle<Image>,
+    texture_tiles: Handle<Image>,
     entities_texture_atlas: Handle<TextureAtlasLayout>,
 }
+
+// #[derive(Debug, Default)]
+// pub struct AssetsHandle {
+//     textures: HashMap<String, Handle<Image>>,
+//     levels: HashMap<String, Handle<Image>>,
+//     sprites: HashMap<String, Handle<Image>>,
+//     patterns: HashMap<String, Handle<Image>>
+// }
 
 #[derive(Debug, Default, Resource)]
 pub struct Game {
@@ -51,7 +59,6 @@ pub enum Direction {
 pub struct Physics {
     acceleration: Vec3,
     velocity: Vec3,
-    // position: Vec2,
     // is_ground: bool,
 }
 
@@ -106,6 +113,22 @@ struct LevelTile {
 struct LevelEntity {
     name: String,
     pos: [u32; 2],
+}
+
+#[derive(serde::Deserialize, TypePath)]
+#[serde(rename_all = "camelCase")]
+struct Sprite {
+    imageURL: String,
+    tileW: u8,
+    tileH: u8,
+    tiles: Vec<SpriteTile>
+}
+
+
+#[derive(serde::Deserialize, TypePath)]
+#[serde(rename_all = "camelCase")]
+struct SpriteTile {
+    index: Option<[u8; 2]>
 }
 
 fn main() {
@@ -336,8 +359,8 @@ fn load_assets(
     let sprites_texture_atlas_handle = texture_atlases.add(sprites_texture_atlas.clone());
     let tiles_texture_handle = asset_server.load("textures/tiles.png");
 
-    game_res.assets.tiles_image = tiles_texture_handle;
-    game_res.assets.entities_image = sprites_texture_handle;
+    game_res.assets.texture_entities = tiles_texture_handle;
+    game_res.assets.texture_tiles = sprites_texture_handle;
     game_res.assets.entities_texture_atlas = sprites_texture_atlas_handle;
 
     next_state.set(AppState::InGame);
@@ -348,9 +371,9 @@ fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         transform: Transform {
             translation: Vec3::new(
-                (config::WINDOW_WIDTH - config::TILE_SIZE) / scale_factor / 2.0
+                (config::WINDOW_WIDTH - config::TILE_SIZE * 2.0) / scale_factor / 2.0
                     - (config::TILE_SIZE / 2.0),
-                (config::WINDOW_HEIGHT - config::TILE_SIZE) / scale_factor / 2.0
+                (config::WINDOW_HEIGHT - config::TILE_SIZE * 2.0) / scale_factor / 2.0
                     - (config::TILE_SIZE / 2.0),
                 1.0,
             ),
@@ -368,7 +391,7 @@ fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
     let init_position = Vec2::new(32.0, 32.0);
     commands.spawn((
         SpriteSheetBundle {
-            texture: game_resource.assets.entities_image.clone(),
+            texture: game_resource.assets.texture_tiles.clone(),
             atlas: TextureAtlas {
                 layout: game_resource.assets.entities_texture_atlas.clone(),
                 index: config::EntityTile::MarioSmallIdle as usize,
