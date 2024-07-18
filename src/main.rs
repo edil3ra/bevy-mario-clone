@@ -1,41 +1,42 @@
 mod config;
 mod debug;
-mod level;
+// mod level;
 mod map;
 use bevy::asset::Asset;
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 
 use bevy_common_assets::json::JsonAssetPlugin;
+use bevy_egui::egui::TextBuffer;
 use debug::DebugPlugins;
 use map::{MapPlugins, TileFactory, TileType};
 use serde::Deserialize;
-use std::cmp::min;
 use std::collections::HashMap;
 use std::ops::Add;
 
 #[derive(Component)]
 struct Player;
 
-#[derive(Debug, Default)]
-pub struct AssetsHandle {
-    texture_entities: Handle<Image>,
-    texture_tiles: Handle<Image>,
-    entities_texture_atlas: Handle<TextureAtlasLayout>,
-}
-
 // #[derive(Debug, Default)]
 // pub struct AssetsHandle {
-//     textures: HashMap<String, Handle<Image>>,
-//     levels: HashMap<String, Handle<Image>>,
-//     sprites: HashMap<String, Handle<Image>>,
-//     patterns: HashMap<String, Handle<Image>>
+//     texture_entities: Handle<Image>,
+//     texture_tiles: Handle<Image>,
+//     entities_texture_atlas: Handle<TextureAtlasLayout>,
 // }
+
+#[derive(Debug, Default)]
+pub struct AssetsHandle {
+    textures: HashMap<String, Handle<Image>>,
+    levels: HashMap<String, Handle<Level>>,
+    sprites: HashMap<String, Handle<Image>>,
+    patterns: HashMap<String, Handle<Image>>,
+    // entities
+}
 
 #[derive(Debug, Default, Resource)]
 pub struct Game {
     assets: AssetsHandle,
-    level: level::Level,
+    current_level: String,
     map_char_to_texture_index: HashMap<char, TileFactory>,
     is_fullscreen: bool,
 }
@@ -81,7 +82,7 @@ impl Intention {
     }
 }
 
-#[derive(Deserialize, Asset, TypePath)]
+#[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Level {
     sprite_sheet: String,
@@ -91,7 +92,7 @@ struct Level {
     layers: Vec<LevelLayer>,
 }
 
-#[derive(serde::Deserialize, TypePath)]
+#[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct LevelLayer {
     tiles: Vec<LevelTile>,
@@ -99,7 +100,7 @@ struct LevelLayer {
     triggers: Vec<u32>,
 }
 
-#[derive(serde::Deserialize, TypePath)]
+#[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct LevelTile {
     style: Option<String>,
@@ -108,27 +109,46 @@ struct LevelTile {
     ranges: Vec<u32>,
 }
 
-#[derive(serde::Deserialize, TypePath)]
+#[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct LevelEntity {
     name: String,
     pos: [u32; 2],
 }
 
-#[derive(serde::Deserialize, TypePath)]
+#[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Sprite {
     imageURL: String,
     tileW: u8,
     tileH: u8,
-    tiles: Vec<SpriteTile>
+    tiles: Vec<SpriteTile>,
 }
 
-
-#[derive(serde::Deserialize, TypePath)]
+#[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct SpriteTile {
-    index: Option<[u8; 2]>
+    index: Option<[u8; 2]>,
+}
+
+#[derive(Deserialize, TypePath, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Pattern {
+    name: HashMap<String, PatternTiles>,
+}
+
+#[derive(Deserialize, TypePath, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+struct PatternTiles {
+    tiles: Vec<PatternTile>,
+}
+
+#[derive(Deserialize, TypePath, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+struct PatternTile {
+    style: String,
+    behaviour: String,
+    ranges: Vec<Vec<u32>>,
 }
 
 fn main() {
@@ -145,7 +165,10 @@ fn main() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-            JsonAssetPlugin::<Level>::new(&["levels/1-1.json"]),
+            JsonAssetPlugin::<Level>::new(&[
+                "levels/1-1.json",
+                "sprites/patterns/overworld-pattern.json",
+            ]),
             MapPlugins {},
             DebugPlugins {},
         ))
@@ -153,7 +176,7 @@ fn main() {
         .register_type::<Intention>()
         .register_type::<Physics>()
         .insert_resource(Game {
-            level: level::Level {
+            current_level: level::Level {
                 current: 0,
                 ..Default::default()
             },
@@ -323,12 +346,17 @@ fn main() {
             ]),
             ..Default::default()
         })
-        .add_systems(Startup, load_assets)
-        .add_systems(OnEnter(AppState::InGame), (spawn_camera, spawn_mario))
+        .add_systems(Startup, (load_assets, setup))
+        .add_systems(
+            OnEnter(AppState::InGame),
+            (
+                spawn_camera, // spawn_mario
+            ),
+        )
         .add_systems(
             Update,
             (
-                sync_player_intention_with_input,
+                // sync_player_intention_with_input,
                 update_player,
                 update_physics,
             )
@@ -341,28 +369,60 @@ fn load_assets(
     mut game_res: ResMut<Game>,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    mut next_state: ResMut<NextState<AppState>>,
 ) {
-    let sprites_texture_handle: Handle<Image> = asset_server.load("textures/entities.png");
+    // let mut entities_atlas = TextureAtlasLayout::new_empty(UVec2::new(32 * 8, 32 * 8));
 
-    let mut sprites_texture_atlas = TextureAtlasLayout::new_empty(UVec2::new(32 * 8, 32 * 8));
+    // for entities_dim in config::ENTITIES_DIM {
+    //     entities_atlas.add_texture(URect::new(
+    //         entities_dim.0,
+    //         entities_dim.1,
+    //         entities_dim.2 + entities_dim.0,
+    //         entities_dim.3 + entities_dim.1,
+    //     ));
+    // }
 
-    for sprite_dim in config::ENTITIES_DIM {
-        sprites_texture_atlas.add_texture(URect::new(
-            sprite_dim.0,
-            sprite_dim.1,
-            sprite_dim.2 + sprite_dim.0,
-            sprite_dim.3 + sprite_dim.1,
-        ));
+    // let sprites_texture_atlas_handle = texture_atlases.add(entities_atlas.clone());
+
+    // game_res.assets.textures.insert("entities".to_string(), asset_server.load("textures/entities.png"));
+    // game_res.assets.textures.insert("tiles".to_string(), asset_server.load("textures/tiles.png"));
+    for (name, url) in config::TEXTURES.iter() {
+        game_res
+            .assets
+            .textures
+            .insert(name.to_string(), asset_server.load(url.to_string()));
     }
 
-    let sprites_texture_atlas_handle = texture_atlases.add(sprites_texture_atlas.clone());
-    let tiles_texture_handle = asset_server.load("textures/tiles.png");
+    for (name, url) in config::LEVELS.iter() {
+        game_res.assets.levels.insert(
+            name.to_string(),
+            asset_server.load(format!("trees.{}", url.to_string())),
+        );
+    }
 
-    game_res.assets.texture_entities = tiles_texture_handle;
-    game_res.assets.texture_tiles = sprites_texture_handle;
-    game_res.assets.entities_texture_atlas = sprites_texture_atlas_handle;
+    for (name, url) in config::PATTERNS.iter() {
+        game_res.assets.patterns.insert(
+            name.to_string(),
+            asset_server.load(format!("trees.{}", url.to_string())),
+        );
+    }
 
+    for (name, url) in config::SPRITES.iter() {
+        game_res.assets.sprites.insert(
+            name.to_string(),
+            asset_server.load(format!("trees.{}", url.to_string())),
+        );
+    }
+}
+
+fn setup(
+    mut game_res: ResMut<Game>,
+    levels: Res<Assets<Level>>,
+    mut next_state: ResMut<NextState<AppState>>,
+) {
+    game_res.current_level = "1-1".to_string();
+    let level = levels
+        .get(game_res.assets.levels.get("1-1").unwrap())
+        .unwrap();
     next_state.set(AppState::InGame);
 }
 
@@ -387,34 +447,31 @@ fn spawn_camera(mut commands: Commands) {
     });
 }
 
-fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
-    let init_position = Vec2::new(32.0, 32.0);
-    commands.spawn((
-        SpriteSheetBundle {
-            texture: game_resource.assets.texture_tiles.clone(),
-            atlas: TextureAtlas {
-                layout: game_resource.assets.entities_texture_atlas.clone(),
-                index: config::EntityTile::MarioSmallIdle as usize,
-            },
-            transform: Transform::from_xyz(init_position.x, init_position.y, 1.0),
-            ..default()
-        },
-        Name::new("mario"),
-        Player,
-        Intention {
-            direction: Direction::Idle,
-            jump: false,
-        },
-        Physics {
-            ..Default::default()
-        },
-    ));
-}
+// fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
+//     let init_position = Vec2::new(32.0, 32.0);
+//     commands.spawn((
+//         SpriteSheetBundle {
+//             texture: game_resource.assets.texture_tiles.clone(),
+//             atlas: TextureAtlas {
+//                 layout: game_resource.assets.entities_texture_atlas.clone(),
+//                 index: config::EntityTile::MarioSmallIdle as usize,
+//             },
+//             transform: Transform::from_xyz(init_position.x, init_position.y, 1.0),
+//             ..default()
+//         },
+//         Name::new("mario"),
+//         Player,
+//         Intention {
+//             direction: Direction::Idle,
+//             jump: false,
+//         },
+//         Physics {
+//             ..Default::default()
+//         },
+//     ));
+// }
 
-fn update_player(
-    time: Res<Time>,
-    mut query: Query<(&mut Physics, &Intention), With<Player>>,
-) {
+fn update_player(time: Res<Time>, mut query: Query<(&mut Physics, &Intention), With<Player>>) {
     let dt = time.delta().as_secs_f32();
     for (mut physics, intention) in &mut query {
         let abs_x = physics.velocity.x.abs();
@@ -444,7 +501,6 @@ fn update_player(
         distance = abs_x * dt;
     }
 }
-
 
 fn update_physics(
     mut last_time: Local<f32>,

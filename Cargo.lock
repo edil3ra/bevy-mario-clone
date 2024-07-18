@@ -3358,7 +3358,9 @@ dependencies = [
  "bevy_common_assets",
  "bevy_ecs_tilemap",
  "bevy_egui 0.27.1",
+ "lazy_static",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

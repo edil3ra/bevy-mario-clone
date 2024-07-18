@@ -1,5 +1,9 @@
+use std::collections::HashMap;
+
+use lazy_static::lazy_static;
+
 pub const LEVEL_COUNT: usize = 1;
-pub const LEVELS: [&str; LEVEL_COUNT] = [include_str!("levels/level0.txt")];
+// pub const LEVELS: [&str; LEVEL_COUNT] = [include_str!("levels/level0.txt")];
 
 pub const WINDOW_WIDTH: f32 = 1920.0;
 pub const WINDOW_HEIGHT: f32 = 1080.0;
@@ -139,4 +143,26 @@ pub enum EntityTile {
     MarioSmallSwim3 = 94,
     MarioSmallSwim4 = 95,
     MarioSmallSwim5 = 96,
+}
+
+lazy_static! {
+    pub static ref TEXTURES: HashMap<&'static str, &'static str> = HashMap::from([
+        ("entities", "textures/entities.png"),
+        ("tiles", "textures/tiles.png"),
+    ]);
+    pub static ref LEVELS: HashMap<&'static str, &'static str> = HashMap::from([
+        ("1-1", "levels/1-1.json"),
+        ("1-2", "levels/1-2.json"),
+        ("1-3", "levels/1-3.json"),
+        ("1-4", "levels/1-4.json"),
+        ("2-1", "levels/2-1.json"),
+    ]);
+    pub static ref PATTERNS: HashMap<&'static str, &'static str> = HashMap::from([
+        ("overworld", "sprites/patterns/overworld-pattern.json"),
+        ("castle", "sprites/patterns/castle-pattern.json"),
+    ]);
+    pub static ref SPRITES: HashMap<&'static str, &'static str> = HashMap::from([
+        ("overworld", "sprites/overworld.json"),
+        ("mario", "sprites/mario.json"),
+    ]);
 }
