@@ -8,7 +8,7 @@ use bevy::{
 };
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::{config, level, AppState, Game, Level};
+use crate::{config, AppState, Game, Level};
 
 #[derive(Debug, Default)]
 pub struct TileFactory {
@@ -53,15 +53,14 @@ impl PluginGroup for MapPlugins {
     }
 }
 
-fn build_map(mut commands: Commands, game_resource: Res<Game>, levels: Res<Assets<Level>>) {
+fn build_map(mut commands: Commands, gr: Res<Game>, levels: Res<Assets<Level>>) {
     // let current_level = level::LevelFile::new(config::LEVELS[game_resource.current_level.current]);
-    let current_level = levels
-        .get(level.get(game_resource.current_level).unwrap())
-        .unwrap();
-
+    // let level_handle = gr.assets.levels.get(&gr.current_level).unwrap();
+    // let level = levels.get(level_handle).unwrap();
+    // dbg!(level);
     // current_level.sprite_sheet
     // let texture_handle = game_resource.assets.texture_entities.clone();
-    let texture_handle = game_resource.assets.textures.get("tiles").unwrap().clone();
+    let texture_handle = gr.assets.textures.get("tiles").unwrap().clone();
 
     // let map_size = TilemapSize {
     //     x: current_level.n_columns as u32,

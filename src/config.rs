@@ -146,23 +146,23 @@ pub enum EntityTile {
 }
 
 lazy_static! {
-    pub static ref TEXTURES: HashMap<&'static str, &'static str> = HashMap::from([
-        ("entities", "textures/entities.png"),
-        ("tiles", "textures/tiles.png"),
+    pub static ref TEXTURES: HashMap<&'static str, String> = HashMap::from([
+        ("entities", "textures/entities.png".to_owned()),
+        ("tiles", "textures/tiles.png".to_owned()),
     ]);
     pub static ref LEVELS: HashMap<&'static str, &'static str> = HashMap::from([
-        ("1-1", "levels/1-1.json"),
-        ("1-2", "levels/1-2.json"),
-        ("1-3", "levels/1-3.json"),
-        ("1-4", "levels/1-4.json"),
-        ("2-1", "levels/2-1.json"),
+        ("1-1", "levels/1-1.level.json"),
+        ("1-2", "levels/1-2.level.json"),
+        ("1-3", "levels/1-3.level.json"),
+        ("1-4", "levels/1-4.level.json"),
+        ("2-1", "levels/2-1.level.json"),
     ]);
     pub static ref PATTERNS: HashMap<&'static str, &'static str> = HashMap::from([
-        ("overworld", "sprites/patterns/overworld-pattern.json"),
-        ("castle", "sprites/patterns/castle-pattern.json"),
+        ("overworld", "patterns/overworld.pattern.json"),
+        ("castle", "patterns/castle.pattern.json"),
     ]);
     pub static ref SPRITES: HashMap<&'static str, &'static str> = HashMap::from([
-        ("overworld", "sprites/overworld.json"),
-        ("mario", "sprites/mario.json"),
+        ("overworld", "sprites/overworld.sprite.json"),
+        ("mario", "sprites/mario.sprite.json"),
     ]);
 }

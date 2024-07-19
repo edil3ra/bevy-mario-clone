@@ -6,6 +6,7 @@ use bevy::asset::Asset;
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 
+use bevy::render::render_resource::Texture;
 use bevy_common_assets::json::JsonAssetPlugin;
 use bevy_egui::egui::TextBuffer;
 use debug::DebugPlugins;
@@ -28,9 +29,8 @@ struct Player;
 pub struct AssetsHandle {
     textures: HashMap<String, Handle<Image>>,
     levels: HashMap<String, Handle<Level>>,
-    sprites: HashMap<String, Handle<Image>>,
-    patterns: HashMap<String, Handle<Image>>,
-    // entities
+    sprites: HashMap<String, Handle<Sprite>>,
+    patterns: HashMap<String, Handle<Pattern>>,
 }
 
 #[derive(Debug, Default, Resource)]
@@ -88,16 +88,16 @@ struct Level {
     sprite_sheet: String,
     pattern_sheet: String,
     music_sheet: String,
-    check_points: [u32; 2],
+    checkpoints: Vec<[u32; 2]>,
     layers: Vec<LevelLayer>,
+    entities: Vec<LevelEntity>,
+    triggers: Vec<u32>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct LevelLayer {
     tiles: Vec<LevelTile>,
-    entities: Vec<LevelEntity>,
-    triggers: Vec<u32>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
@@ -106,7 +106,7 @@ struct LevelTile {
     style: Option<String>,
     pattern: Option<String>,
     behavior: Option<String>,
-    ranges: Vec<u32>,
+    ranges: Vec<Vec<u32>>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
@@ -116,7 +116,7 @@ struct LevelEntity {
     pos: [u32; 2],
 }
 
-#[derive(Deserialize, TypePath, Default, Debug)]
+#[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Sprite {
     imageURL: String,
@@ -131,7 +131,7 @@ struct SpriteTile {
     index: Option<[u8; 2]>,
 }
 
-#[derive(Deserialize, TypePath, Default, Debug)]
+#[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Pattern {
     name: HashMap<String, PatternTiles>,
@@ -165,10 +165,9 @@ fn main() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-            JsonAssetPlugin::<Level>::new(&[
-                "levels/1-1.json",
-                "sprites/patterns/overworld-pattern.json",
-            ]),
+            JsonAssetPlugin::<Level>::new(&["level.json"]),
+            JsonAssetPlugin::<Pattern>::new(&["pattern.json"]),
+            JsonAssetPlugin::<Sprite>::new(&["sprite.json"]),
             MapPlugins {},
             DebugPlugins {},
         ))
@@ -176,10 +175,6 @@ fn main() {
         .register_type::<Intention>()
         .register_type::<Physics>()
         .insert_resource(Game {
-            current_level: level::Level {
-                current: 0,
-                ..Default::default()
-            },
             map_char_to_texture_index: HashMap::from([
                 (
                     '0',
@@ -346,7 +341,7 @@ fn main() {
             ]),
             ..Default::default()
         })
-        .add_systems(Startup, (load_assets, setup))
+        .add_systems(Startup, (load_assets, setup).chain())
         .add_systems(
             OnEnter(AppState::InGame),
             (
@@ -393,36 +388,33 @@ fn load_assets(
     }
 
     for (name, url) in config::LEVELS.iter() {
-        game_res.assets.levels.insert(
-            name.to_string(),
-            asset_server.load(format!("trees.{}", url.to_string())),
-        );
+        dbg!(url);
+        game_res
+            .assets
+            .levels
+            .insert(name.to_string(), asset_server.load(url.to_string()));
     }
 
     for (name, url) in config::PATTERNS.iter() {
-        game_res.assets.patterns.insert(
-            name.to_string(),
-            asset_server.load(format!("trees.{}", url.to_string())),
-        );
+        game_res
+            .assets
+            .patterns
+            .insert(name.to_string(), asset_server.load(url.to_string()));
     }
 
     for (name, url) in config::SPRITES.iter() {
-        game_res.assets.sprites.insert(
-            name.to_string(),
-            asset_server.load(format!("trees.{}", url.to_string())),
-        );
+        game_res
+            .assets
+            .sprites
+            .insert(name.to_string(), asset_server.load(url.to_string()));
     }
 }
 
 fn setup(
     mut game_res: ResMut<Game>,
-    levels: Res<Assets<Level>>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
     game_res.current_level = "1-1".to_string();
-    let level = levels
-        .get(game_res.assets.levels.get("1-1").unwrap())
-        .unwrap();
     next_state.set(AppState::InGame);
 }
 
@@ -506,7 +498,11 @@ fn update_physics(
     mut last_time: Local<f32>,
     time: Res<Time>,
     mut query: Query<(&mut Physics, &mut Transform)>,
+    mut game_res: ResMut<Game>,
+    levels: Res<Assets<Level>>,
 ) {
+    let t = levels.iter();
+    dbg!(t.count());
     let dt = time.elapsed_seconds() - *last_time;
     for (physics, mut transform) in &mut query {
         transform.translation = transform.translation.add(physics.velocity * dt);
