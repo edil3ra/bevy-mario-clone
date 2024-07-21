@@ -57,7 +57,6 @@ fn build_map(mut commands: Commands, gr: Res<Game>, levels: Res<Assets<Level>>) 
     // let current_level = level::LevelFile::new(config::LEVELS[game_resource.current_level.current]);
     // let level_handle = gr.assets.levels.get(&gr.current_level).unwrap();
     // let level = levels.get(level_handle).unwrap();
-    // dbg!(level);
     // current_level.sprite_sheet
     // let texture_handle = game_resource.assets.texture_entities.clone();
     let texture_handle = gr.assets.textures.get("tiles").unwrap().clone();

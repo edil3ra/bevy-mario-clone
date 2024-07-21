@@ -151,18 +151,18 @@ lazy_static! {
         ("tiles", "textures/tiles.png".to_owned()),
     ]);
     pub static ref LEVELS: HashMap<&'static str, &'static str> = HashMap::from([
-        ("1-1", "levels/1-1.level.json"),
-        ("1-2", "levels/1-2.level.json"),
-        ("1-3", "levels/1-3.level.json"),
-        ("1-4", "levels/1-4.level.json"),
-        ("2-1", "levels/2-1.level.json"),
+        // ("1-1", "levels/1-1.level.json"),
+        // ("1-2", "levels/1-2.level.json"),
+        // ("1-3", "levels/1-3.level.json"),
+        // ("1-4", "levels/1-4.level.json"),
+        // ("2-1", "levels/2-1.level.json"),
     ]);
     pub static ref PATTERNS: HashMap<&'static str, &'static str> = HashMap::from([
-        ("overworld", "patterns/overworld.pattern.json"),
-        ("castle", "patterns/castle.pattern.json"),
+        // ("overworld", "patterns/overworld.pattern.json"),
+        // ("castle", "patterns/castle.pattern.json"),
     ]);
     pub static ref SPRITES: HashMap<&'static str, &'static str> = HashMap::from([
         ("overworld", "sprites/overworld.sprite.json"),
-        ("mario", "sprites/mario.sprite.json"),
+        // ("mario", "sprites/mario.sprite.json"),
     ]);
 }

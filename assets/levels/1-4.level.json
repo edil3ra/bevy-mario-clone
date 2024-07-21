@@ -1,7 +1,7 @@
 {
     "spriteSheet": "castle",
     "musicSheet": "castle",
-    "patternSheet": "castle-pattern",
+    "patternSheet": "castle.pattern",
     "checkpoints": [
         [40, 96]
     ],

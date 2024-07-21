@@ -71,11 +71,11 @@ impl Default for Direction {
 
 #[derive(Debug, Default, Component, Reflect)]
 #[reflect(Component)]
-struct Intention {
+struct Action {
     direction: Direction,
     jump: bool,
 }
-impl Intention {
+impl Action {
     fn reset(&mut self) {
         self.direction = Direction::default();
         self.jump = false;
@@ -91,7 +91,7 @@ struct Level {
     checkpoints: Vec<[u32; 2]>,
     layers: Vec<LevelLayer>,
     entities: Vec<LevelEntity>,
-    triggers: Vec<u32>,
+    triggers: Vec<LevelTrigger>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
@@ -106,7 +106,7 @@ struct LevelTile {
     style: Option<String>,
     pattern: Option<String>,
     behavior: Option<String>,
-    ranges: Vec<Vec<u32>>,
+    ranges: Vec<Vec<i32>>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
@@ -116,25 +116,43 @@ struct LevelEntity {
     pos: [u32; 2],
 }
 
+#[derive(Deserialize, TypePath, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+struct LevelTrigger {
+    action: String,
+    name: String,
+    pos: [u32; 2],
+}
+
 #[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Sprite {
-    imageURL: String,
-    tileW: u8,
-    tileH: u8,
+    image_url: String,
+    tile_w: u8,
+    tile_h: u8,
     tiles: Vec<SpriteTile>,
+    animations: Vec<Animation>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct SpriteTile {
+    name: String,
     index: Option<[u8; 2]>,
+}
+
+#[derive(Deserialize, TypePath, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Animation {
+    name: String,
+    frame_len: f32,
+    frames: Vec<String>,
 }
 
 #[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Pattern {
-    name: HashMap<String, PatternTiles>,
+    patterns: HashMap<String, PatternTiles>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
@@ -146,8 +164,8 @@ struct PatternTiles {
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 struct PatternTile {
-    style: String,
-    behaviour: String,
+    style: Option<String>,
+    behaviour: Option<String>,
     ranges: Vec<Vec<u32>>,
 }
 
@@ -172,7 +190,7 @@ fn main() {
             DebugPlugins {},
         ))
         .init_state::<AppState>()
-        .register_type::<Intention>()
+        .register_type::<Action>()
         .register_type::<Physics>()
         .insert_resource(Game {
             map_char_to_texture_index: HashMap::from([
@@ -342,12 +360,7 @@ fn main() {
             ..Default::default()
         })
         .add_systems(Startup, (load_assets, setup).chain())
-        .add_systems(
-            OnEnter(AppState::InGame),
-            (
-                spawn_camera, // spawn_mario
-            ),
-        )
+        .add_systems(OnEnter(AppState::InGame), (spawn_camera, spawn_mario))
         .add_systems(
             Update,
             (
@@ -388,7 +401,6 @@ fn load_assets(
     }
 
     for (name, url) in config::LEVELS.iter() {
-        dbg!(url);
         game_res
             .assets
             .levels
@@ -410,10 +422,7 @@ fn load_assets(
     }
 }
 
-fn setup(
-    mut game_res: ResMut<Game>,
-    mut next_state: ResMut<NextState<AppState>>,
-) {
+fn setup(mut game_res: ResMut<Game>, mut next_state: ResMut<NextState<AppState>>) {
     game_res.current_level = "1-1".to_string();
     next_state.set(AppState::InGame);
 }
@@ -439,31 +448,31 @@ fn spawn_camera(mut commands: Commands) {
     });
 }
 
-// fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
-//     let init_position = Vec2::new(32.0, 32.0);
-//     commands.spawn((
-//         SpriteSheetBundle {
-//             texture: game_resource.assets.texture_tiles.clone(),
-//             atlas: TextureAtlas {
-//                 layout: game_resource.assets.entities_texture_atlas.clone(),
-//                 index: config::EntityTile::MarioSmallIdle as usize,
-//             },
-//             transform: Transform::from_xyz(init_position.x, init_position.y, 1.0),
-//             ..default()
-//         },
-//         Name::new("mario"),
-//         Player,
-//         Intention {
-//             direction: Direction::Idle,
-//             jump: false,
-//         },
-//         Physics {
-//             ..Default::default()
-//         },
-//     ));
-// }
+fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
+    let init_position = Vec2::new(32.0, 32.0);
+    commands.spawn((
+        SpriteSheetBundle {
+            texture: game_resource.assets.texture_tiles.clone(),
+            atlas: TextureAtlas {
+                layout: game_resource.assets.entities_texture_atlas.clone(),
+                index: config::EntityTile::MarioSmallIdle as usize,
+            },
+            transform: Transform::from_xyz(init_position.x, init_position.y, 1.0),
+            ..default()
+        },
+        Name::new("mario"),
+        Player,
+        Intention {
+            direction: Direction::Idle,
+            jump: false,
+        },
+        Physics {
+            ..Default::default()
+        },
+    ));
+}
 
-fn update_player(time: Res<Time>, mut query: Query<(&mut Physics, &Intention), With<Player>>) {
+fn update_player(time: Res<Time>, mut query: Query<(&mut Physics, &Action), With<Player>>) {
     let dt = time.delta().as_secs_f32();
     for (mut physics, intention) in &mut query {
         let abs_x = physics.velocity.x.abs();
@@ -502,7 +511,6 @@ fn update_physics(
     levels: Res<Assets<Level>>,
 ) {
     let t = levels.iter();
-    dbg!(t.count());
     let dt = time.elapsed_seconds() - *last_time;
     for (physics, mut transform) in &mut query {
         transform.translation = transform.translation.add(physics.velocity * dt);
@@ -512,7 +520,7 @@ fn update_physics(
 
 fn sync_player_intention_with_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut action_query: Query<&mut Intention, With<Player>>,
+    mut action_query: Query<&mut Action, With<Player>>,
 ) {
     let mut intention = action_query.get_single_mut().unwrap();
     intention.reset();

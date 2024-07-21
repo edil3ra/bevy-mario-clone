@@ -5,6 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+dev = [
+    # Improve compile times for dev builds by linking Bevy as a dynamic library.
+    "bevy/dynamic_linking",
+    "bevy/bevy_dev_tools",
+]
+
 [profile.dev]
 opt-level = 1
 
@@ -13,6 +20,10 @@ opt-level = 3
 
 [dependencies]
 bevy = { version = "0.14.0", features = ["dynamic_linking"] }
+log = { version = "0.4", features = [
+    "max_level_debug",
+    "release_max_level_warn",
+] }
 bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap" }
 bevy_egui = "0.27.1"
 bevy-inspector-egui = "0.25.0"

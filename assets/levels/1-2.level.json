@@ -1,7 +1,7 @@
 {
     "spriteSheet": "underworld",
     "musicSheet": "underworld",
-    "patternSheet": "underworld-pattern",
+    "patternSheet": "underworld.pattern",
     "checkpoints": [
         [40, 48]
     ],
@@ -237,7 +237,7 @@
 
     "triggers": [
         {
-            "type": "goto",
+            "action": "goto",
             "name": "1-1",
             "pos": [64, 64]
         }
