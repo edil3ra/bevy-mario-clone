@@ -1,4 +1,6 @@
 mod assets;
+mod ui;
+mod screens;
 mod config;
 mod dev_tools;
 mod map;
@@ -17,12 +19,6 @@ use std::ops::Add;
 #[derive(Component)]
 struct Player;
 
-// #[derive(Debug, Default)]
-// pub struct AssetsHandle {
-//     texture_entities: Handle<Image>,
-//     texture_tiles: Handle<Image>,
-//     entities_texture_atlas: Handle<TextureAtlasLayout>,
-// }
 
 #[derive(Debug, Default, Resource)]
 pub struct Game {
@@ -88,7 +84,7 @@ impl Plugin for AppPlugin {
                 .set(ImagePlugin::default_nearest()),
         );
 
-        app.add_plugins((assets::plugin, map::plugin));
+        app.add_plugins((assets::plugin, map::plugin, ui::plugin));
 
         #[cfg(feature = "dev")]
         app.add_plugins(dev_tools::plugin);
