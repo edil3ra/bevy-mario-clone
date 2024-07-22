@@ -8,7 +8,7 @@ use bevy::{
 };
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::{config, AppState, Game, Level};
+use crate::{config, AppState, Game};
 
 #[derive(Debug, Default)]
 pub struct TileFactory {
@@ -37,29 +37,17 @@ impl Default for TileType {
     }
 }
 
-pub struct MapPlugin {}
-impl Plugin for MapPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InGame), build_map);
-    }
+pub(super) fn plugin(app: &mut App) {
+    app.add_plugins(TilemapPlugin);
+    app.add_systems(OnEnter(AppState::Playing), build_map);
 }
 
-pub struct MapPlugins;
-impl PluginGroup for MapPlugins {
-    fn build(self) -> bevy::app::PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>()
-            .add(TilemapPlugin)
-            .add(MapPlugin {})
-    }
-}
-
-fn build_map(mut commands: Commands, gr: Res<Game>, levels: Res<Assets<Level>>) {
+fn build_map(mut commands: Commands, gr: Res<Game>) {
     // let current_level = level::LevelFile::new(config::LEVELS[game_resource.current_level.current]);
     // let level_handle = gr.assets.levels.get(&gr.current_level).unwrap();
     // let level = levels.get(level_handle).unwrap();
     // current_level.sprite_sheet
     // let texture_handle = game_resource.assets.texture_entities.clone();
-    let texture_handle = gr.assets.textures.get("tiles").unwrap().clone();
 
     // let map_size = TilemapSize {
     //     x: current_level.n_columns as u32,

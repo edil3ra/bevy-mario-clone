@@ -4,20 +4,11 @@ use bevy::{app::PluginGroupBuilder, prelude::*};
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-struct InputPlugin;
-impl Plugin for InputPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, (move_camera, toggle_fullscreen));
-    }
-}
-
-pub struct DebugPlugins;
-impl PluginGroup for DebugPlugins {
-    fn build(self) -> PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>()
-            .add(InputPlugin)
-            .add(WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)))
-    }
+pub(super) fn plugin(app: &mut App) {
+    app.add_plugins(
+        WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)),
+    );
+    app.add_systems(Update, (move_camera, toggle_fullscreen));
 }
 
 fn toggle_fullscreen(

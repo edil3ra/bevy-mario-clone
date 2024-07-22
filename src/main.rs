@@ -1,6 +1,6 @@
+mod assets;
 mod config;
-mod debug;
-// mod level;
+mod dev_tools;
 mod map;
 use bevy::asset::Asset;
 use bevy::input::common_conditions::input_toggle_active;
@@ -9,8 +9,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::Texture;
 use bevy_common_assets::json::JsonAssetPlugin;
 use bevy_egui::egui::TextBuffer;
-use debug::DebugPlugins;
-use map::{MapPlugins, TileFactory, TileType};
+use map::{TileFactory, TileType};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::ops::Add;
@@ -25,17 +24,8 @@ struct Player;
 //     entities_texture_atlas: Handle<TextureAtlasLayout>,
 // }
 
-#[derive(Debug, Default)]
-pub struct AssetsHandle {
-    textures: HashMap<String, Handle<Image>>,
-    levels: HashMap<String, Handle<Level>>,
-    sprites: HashMap<String, Handle<Sprite>>,
-    patterns: HashMap<String, Handle<Pattern>>,
-}
-
 #[derive(Debug, Default, Resource)]
 pub struct Game {
-    assets: AssetsHandle,
     current_level: String,
     is_fullscreen: bool,
 }
@@ -43,8 +33,8 @@ pub struct Game {
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
     #[default]
-    Load,
-    InGame,
+    Loading,
+    Playing,
 }
 
 #[derive(Reflect, Debug)]
@@ -81,96 +71,10 @@ impl Action {
     }
 }
 
-#[derive(Deserialize, Asset, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct Level {
-    sprite_sheet: String,
-    pattern_sheet: String,
-    music_sheet: String,
-    checkpoints: Vec<[u32; 2]>,
-    layers: Vec<LevelLayer>,
-    entities: Vec<LevelEntity>,
-    triggers: Vec<LevelTrigger>,
-}
-
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct LevelLayer {
-    tiles: Vec<LevelTile>,
-}
-
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct LevelTile {
-    style: Option<String>,
-    pattern: Option<String>,
-    behavior: Option<String>,
-    ranges: Vec<Vec<i32>>,
-}
-
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct LevelEntity {
-    name: String,
-    pos: [u32; 2],
-}
-
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct LevelTrigger {
-    action: String,
-    name: String,
-    pos: [u32; 2],
-}
-
-#[derive(Deserialize, Asset, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct Sprite {
-    image_url: String,
-    tile_w: u8,
-    tile_h: u8,
-    tiles: Vec<SpriteTile>,
-    animations: Vec<Animation>,
-}
-
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct SpriteTile {
-    name: String,
-    index: Option<[u8; 2]>,
-}
-
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct Animation {
-    name: String,
-    frame_len: f32,
-    frames: Vec<String>,
-}
-
-#[derive(Deserialize, Asset, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct Pattern {
-    patterns: HashMap<String, PatternTiles>,
-}
-
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct PatternTiles {
-    tiles: Vec<PatternTile>,
-}
-
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-struct PatternTile {
-    style: Option<String>,
-    behaviour: Option<String>,
-    ranges: Vec<Vec<u32>>,
-}
-
-fn main() {
-    App::new()
-        .add_plugins((
+pub struct AppPlugin;
+impl Plugin for AppPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
@@ -182,84 +86,38 @@ fn main() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-            JsonAssetPlugin::<Level>::new(&["level.json"]),
-            JsonAssetPlugin::<Pattern>::new(&["pattern.json"]),
-            JsonAssetPlugin::<Sprite>::new(&["sprite.json"]),
-            MapPlugins {},
-            DebugPlugins {},
-        ))
-        .init_state::<AppState>()
-        .register_type::<Action>()
-        .register_type::<Physics>()
-        .insert_resource(Game {
+        );
+
+        app.add_plugins((assets::plugin, map::plugin));
+
+        #[cfg(feature = "dev")]
+        app.add_plugins(dev_tools::plugin);
+
+        app.init_state::<AppState>();
+        app.insert_resource(Game {
             current_level: "1-1".to_string(),
             ..Default::default()
-        })
-        .add_systems(Startup, (load_assets, setup).chain())
-        .add_systems(OnEnter(AppState::InGame), (spawn_camera, spawn_mario))
-        .add_systems(
-            Update,
-            (
-                sync_player_action_with_input,
-                update_player,
-                update_physics,
+        });
+        
+        app.add_systems(Startup, setup)
+            .add_systems(
+                OnEnter(AppState::Playing),
+                (
+                    spawn_camera, // spawn_mario
+                ),
             )
-                .run_if(in_state(AppState::InGame)),
-        )
-        .run();
+            .add_systems(
+                Update,
+                (sync_player_action_with_input, update_player)
+                    .run_if(in_state(AppState::Playing)),
+            );
+    }
 }
 
-fn load_assets(
-    mut game_res: ResMut<Game>,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    for (name, url) in config::TEXTURES.iter() {
-        game_res
-            .assets
-            .textures
-            .insert(name.to_string(), asset_server.load(url.to_string()));
-    }
 
-    for (name, url) in config::LEVELS.iter() {
-        game_res
-            .assets
-            .levels
-            .insert(name.to_string(), asset_server.load(url.to_string()));
-    }
-
-    for (name, url) in config::PATTERNS.iter() {
-        game_res
-            .assets
-            .patterns
-            .insert(name.to_string(), asset_server.load(url.to_string()));
-    }
-
-    for (name, url) in config::SPRITES.iter() {
-        game_res
-            .assets
-            .sprites
-            .insert(name.to_string(), asset_server.load(url.to_string()));
-    }
-
-    let mut entities_atlas = TextureAtlasLayout::new_empty(UVec2::new(32 * 8, 32 * 8));
-
-    for entities_dim in config::ENTITIES_DIM {
-        entities_atlas.add_texture(URect::new(
-            entities_dim.0,
-            entities_dim.1,
-            entities_dim.2 + entities_dim.0,
-            entities_dim.3 + entities_dim.1,
-        ));
-    }
-
-    let sprites_texture_atlas_handle = texture_atlases.add(entities_atlas.clone());
-
-    
-}
 
 fn setup(mut game_res: ResMut<Game>, mut next_state: ResMut<NextState<AppState>>) {
-    next_state.set(AppState::InGame);
+    next_state.set(AppState::Playing);
 }
 
 fn spawn_camera(mut commands: Commands) {
@@ -338,20 +196,20 @@ fn update_player(time: Res<Time>, mut query: Query<(&mut Physics, &Action), With
     }
 }
 
-fn update_physics(
-    mut last_time: Local<f32>,
-    time: Res<Time>,
-    mut query: Query<(&mut Physics, &mut Transform)>,
-    mut game_res: ResMut<Game>,
-    levels: Res<Assets<Level>>,
-) {
-    let t = levels.iter();
-    let dt = time.elapsed_seconds() - *last_time;
-    for (physics, mut transform) in &mut query {
-        transform.translation = transform.translation.add(physics.velocity * dt);
-    }
-    *last_time = time.elapsed_seconds();
-}
+// fn update_physics(
+//     mut last_time: Local<f32>,
+//     time: Res<Time>,
+//     mut query: Query<(&mut Physics, &mut Transform)>,
+//     mut game_res: ResMut<Game>,
+//     levels: Res<Assets<Level>>,
+// ) {
+//     let t = levels.iter();
+//     let dt = time.elapsed_seconds() - *last_time;
+//     for (physics, mut transform) in &mut query {
+//         transform.translation = transform.translation.add(physics.velocity * dt);
+//     }
+//     *last_time = time.elapsed_seconds();
+// }
 
 fn sync_player_action_with_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -370,4 +228,10 @@ fn sync_player_action_with_input(
     if keyboard_input.pressed(KeyCode::Space) {
         intention.jump = true
     }
+}
+
+
+
+fn main() -> AppExit {
+    App::new().add_plugins(AppPlugin).run()
 }
