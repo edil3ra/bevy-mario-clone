@@ -37,7 +37,6 @@ pub struct AssetsHandle {
 pub struct Game {
     assets: AssetsHandle,
     current_level: String,
-    map_char_to_texture_index: HashMap<char, TileFactory>,
     is_fullscreen: bool,
 }
 
@@ -193,170 +192,7 @@ fn main() {
         .register_type::<Action>()
         .register_type::<Physics>()
         .insert_resource(Game {
-            map_char_to_texture_index: HashMap::from([
-                (
-                    '0',
-                    TileFactory {
-                        name: String::from("unkown_for_now"),
-                        tileType: TileType::Fixed { texture_index: 100 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '1',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 2 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '2',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 3 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '3',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 4 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '4',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 5 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '5',
-                    TileFactory {
-                        name: String::from("removable_block"),
-                        tileType: TileType::Fixed { texture_index: 1 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '6',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 7 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '7',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 8 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '8',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 9 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '9',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 10 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    ':',
-                    TileFactory {
-                        name: String::from("hard_block_brown"),
-                        tileType: TileType::Fixed { texture_index: 0 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    ';',
-                    TileFactory {
-                        name: String::from("hard_block_brown"),
-                        tileType: TileType::Fixed { texture_index: 0 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '<',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 13 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '=',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 14 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '>',
-                    TileFactory {
-                        name: String::from("interogation_block"),
-                        tileType: TileType::Fixed { texture_index: 4 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '?',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 16 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    '@',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 17 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    'A',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 18 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    'B',
-                    TileFactory {
-                        name: String::from("name"),
-                        tileType: TileType::Fixed { texture_index: 19 },
-                        ..Default::default()
-                    },
-                ),
-                (
-                    'C',
-                    TileFactory {
-                        name: String::from("sky"),
-                        tileType: TileType::Fixed {
-                            texture_index: 7 * config::TILE_TILES_COLUMN_SIZE + 9,
-                        },
-                        ..Default::default()
-                    },
-                ),
-            ]),
+            current_level: "1-1".to_string(),
             ..Default::default()
         })
         .add_systems(Startup, (load_assets, setup).chain())
@@ -364,7 +200,7 @@ fn main() {
         .add_systems(
             Update,
             (
-                // sync_player_intention_with_input,
+                sync_player_action_with_input,
                 update_player,
                 update_physics,
             )
@@ -378,21 +214,6 @@ fn load_assets(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    // let mut entities_atlas = TextureAtlasLayout::new_empty(UVec2::new(32 * 8, 32 * 8));
-
-    // for entities_dim in config::ENTITIES_DIM {
-    //     entities_atlas.add_texture(URect::new(
-    //         entities_dim.0,
-    //         entities_dim.1,
-    //         entities_dim.2 + entities_dim.0,
-    //         entities_dim.3 + entities_dim.1,
-    //     ));
-    // }
-
-    // let sprites_texture_atlas_handle = texture_atlases.add(entities_atlas.clone());
-
-    // game_res.assets.textures.insert("entities".to_string(), asset_server.load("textures/entities.png"));
-    // game_res.assets.textures.insert("tiles".to_string(), asset_server.load("textures/tiles.png"));
     for (name, url) in config::TEXTURES.iter() {
         game_res
             .assets
@@ -420,10 +241,24 @@ fn load_assets(
             .sprites
             .insert(name.to_string(), asset_server.load(url.to_string()));
     }
+
+    let mut entities_atlas = TextureAtlasLayout::new_empty(UVec2::new(32 * 8, 32 * 8));
+
+    for entities_dim in config::ENTITIES_DIM {
+        entities_atlas.add_texture(URect::new(
+            entities_dim.0,
+            entities_dim.1,
+            entities_dim.2 + entities_dim.0,
+            entities_dim.3 + entities_dim.1,
+        ));
+    }
+
+    let sprites_texture_atlas_handle = texture_atlases.add(entities_atlas.clone());
+
+    
 }
 
 fn setup(mut game_res: ResMut<Game>, mut next_state: ResMut<NextState<AppState>>) {
-    game_res.current_level = "1-1".to_string();
     next_state.set(AppState::InGame);
 }
 
@@ -448,29 +283,29 @@ fn spawn_camera(mut commands: Commands) {
     });
 }
 
-fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
-    let init_position = Vec2::new(32.0, 32.0);
-    commands.spawn((
-        SpriteSheetBundle {
-            texture: game_resource.assets.texture_tiles.clone(),
-            atlas: TextureAtlas {
-                layout: game_resource.assets.entities_texture_atlas.clone(),
-                index: config::EntityTile::MarioSmallIdle as usize,
-            },
-            transform: Transform::from_xyz(init_position.x, init_position.y, 1.0),
-            ..default()
-        },
-        Name::new("mario"),
-        Player,
-        Intention {
-            direction: Direction::Idle,
-            jump: false,
-        },
-        Physics {
-            ..Default::default()
-        },
-    ));
-}
+// fn spawn_mario(mut commands: Commands, game_resource: Res<Game>) {
+//     let init_position = Vec2::new(32.0, 32.0);
+//     commands.spawn((
+//         SpriteSheetBundle {
+//             texture: game_resource.assets.texture_tiles.clone(),
+//             atlas: TextureAtlas {
+//                 layout: game_resource.assets.entities_texture_atlas.clone(),
+//                 index: config::EntityTile::MarioSmallIdle as usize,
+//             },
+//             transform: Transform::from_xyz(init_position.x, init_position.y, 1.0),
+//             ..default()
+//         },
+//         Name::new("mario"),
+//         Player,
+//         Action {
+//             direction: Direction::Idle,
+//             jump: false,
+//         },
+//         Physics {
+//             ..Default::default()
+//         },
+//     ));
+// }
 
 fn update_player(time: Res<Time>, mut query: Query<(&mut Physics, &Action), With<Player>>) {
     let dt = time.delta().as_secs_f32();
@@ -518,7 +353,7 @@ fn update_physics(
     *last_time = time.elapsed_seconds();
 }
 
-fn sync_player_intention_with_input(
+fn sync_player_action_with_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut action_query: Query<&mut Action, With<Player>>,
 ) {
