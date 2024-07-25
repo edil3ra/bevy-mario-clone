@@ -9,10 +9,7 @@ pub(super) fn plugin(app: &mut App) {
     app.init_state::<Screen>();
     app.enable_state_scoped_entities::<Screen>();
 
-    app.add_plugins((
-        loading::plugin,
-        playing::plugin,
-    ));
+    app.add_plugins((loading::plugin, playing::plugin));
 }
 
 /// The game's main screen states.
