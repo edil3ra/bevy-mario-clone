@@ -10,7 +10,7 @@ log = { version = "0.4", features = [
     "max_level_debug",
     "release_max_level_warn",
 ] }
-bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap" }
+bevy_ecs_tilemap = "0.14"
 bevy-inspector-egui = "0.25.0"
 bevy_common_assets = {version = "0.11.0", features = ["json"]}
 serde = "1.0"

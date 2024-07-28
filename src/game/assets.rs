@@ -9,28 +9,28 @@ use serde::Deserialize;
 #[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Level {
-    sprite_sheet: String,
-    pattern_sheet: String,
-    music_sheet: String,
-    checkpoints: Vec<[u32; 2]>,
-    layers: Vec<LevelLayer>,
-    entities: Vec<LevelEntity>,
-    triggers: Vec<LevelTrigger>,
+    pub sprite_sheet: String,
+    pub pattern_sheet: String,
+    pub music_sheet: String,
+    pub checkpoints: Vec<[u32; 2]>,
+    pub layers: Vec<LevelLayer>,
+    pub entities: Vec<LevelEntity>,
+    pub triggers: Vec<LevelTrigger>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct LevelLayer {
-    tiles: Vec<LevelTile>,
+pub struct LevelLayer {
+    pub tiles: Vec<LevelTile>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct LevelTile {
-    style: Option<String>,
-    pattern: Option<String>,
-    behavior: Option<String>,
-    ranges: Vec<Vec<i32>>,
+pub struct LevelTile {
+    pub style: Option<String>,
+    pub pattern: Option<String>,
+    pub behavior: Option<String>,
+    pub ranges: Vec<Vec<i32>>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
@@ -136,8 +136,9 @@ impl FromWorld for HandleMap<TextureKey> {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Reflect)]
+#[derive(Default, Copy, Clone, Eq, PartialEq, Hash, Reflect)]
 pub enum LevelKey {
+    #[default]
     OneOne,
     OneTwo,
     OneThree,

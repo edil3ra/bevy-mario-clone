@@ -8,6 +8,5 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 fn enter_playing(mut commands: Commands) {
-    dbg!("hello");
     commands.trigger(SpawnLevel);
 }

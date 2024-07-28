@@ -1,12 +1,14 @@
 use bevy::prelude::*;
 
+use self::assets::LevelKey;
+
 pub mod assets;
 mod movement;
 pub mod spawn;
 
 #[derive(Resource, Default)]
 pub struct GameState {
-    pub current_level: String,
+    pub current_level: LevelKey,
 }
 
 #[derive(Resource, Default)]
@@ -16,7 +18,7 @@ pub struct SettingsState {
 
 pub(super) fn plugin(app: &mut App) {
     app.insert_resource(GameState {
-        current_level: "1-1".to_string(),
+        current_level: LevelKey::OneOne,
     });
     app.insert_resource(SettingsState {
         is_fullscreen: false,
