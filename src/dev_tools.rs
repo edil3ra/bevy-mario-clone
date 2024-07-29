@@ -41,7 +41,7 @@ fn move_camera(
         transform.translation.y += 10.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyY) {
+    if keyboard_input.pressed(KeyCode::KeyK) {
         transform.translation.y += -10.0;
     }
 

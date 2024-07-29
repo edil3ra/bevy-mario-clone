@@ -14,6 +14,8 @@ use crate::game::{
     GameState,
 };
 
+use super::level::OverWorld;
+
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(TilemapPlugin);
     app.observe(spawn_map);
@@ -39,29 +41,47 @@ fn spawn_map(
         .get(level_handles[&gs.current_level].clone_weak().id())
         .unwrap();
 
-    for layer in &level.layers {
+    for (index, layer) in level.layers.iter().enumerate() {
+        let map = commands
+            .spawn_empty()
+            .insert((
+                SpatialBundle {
+                    transform: Transform::from_xyz(0.0, 0., 0.),
+                    ..Default::default()
+                },
+                Name::new(format!("layer-{}", index)),
+            ))
+            .id();
         for tile in &layer.tiles {
             if let Some(pattern) = &tile.pattern {
-                //ignore for now
+                // pattern.
             }
-            if let Some(style) = &tile.style {
+            if let Some(style) = tile.style.as_ref() {
+                dbg!(style);
                 for range in &tile.ranges {
                     match range[..] {
                         [x1, x2, y1, y2] => {
-                            for x in x1..x2 {
-                                for y in y1..y2 {
+                            for x in x1..x1 + x2 {
+                                for y in y1..y1 + y2 {
                                     let tile_pos = TilePos {
                                         x: x as u32,
-                                        y: y as u32,
+                                        y: 14 - y as u32,
                                     };
                                     let tile_entity = commands
-                                        .spawn(TileBundle {
-                                            position: tile_pos,
-                                            tilemap_id: TilemapId(tilemap_entity),
-                                            texture_index: TileTextureIndex(20),
-                                            ..Default::default()
-                                        })
+                                        .spawn(
+                                            (TileBundle {
+                                                position: tile_pos,
+                                                tilemap_id: TilemapId(tilemap_entity),
+                                                texture_index: TileTextureIndex(OverWorld::from(
+                                                    style.as_ref(),
+                                                )
+                                                    as u32),
+                                                ..Default::default()
+                                            },
+                                            Name::new(format!("x:{}-y:{}", x, y)),
+                                        ))
                                         .id();
+                                    commands.entity(map).add_child(tile_entity);
                                     tile_storage.set(&tile_pos, tile_entity);
                                 }
                             }
