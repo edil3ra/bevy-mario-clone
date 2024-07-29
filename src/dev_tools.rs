@@ -29,19 +29,19 @@ fn move_camera(
     mut query: Query<&mut Transform, With<Camera2d>>,
 ) {
     let mut transform = query.get_single_mut().unwrap();
-    if keyboard_input.pressed(KeyCode::KeyG) {
+    if keyboard_input.pressed(KeyCode::KeyJ) {
         transform.translation.x += -10.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyC) {
+    if keyboard_input.pressed(KeyCode::KeyL) {
         transform.translation.x += 10.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyR) {
+    if keyboard_input.pressed(KeyCode::KeyI) {
         transform.translation.y += 10.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyL) {
+    if keyboard_input.pressed(KeyCode::KeyY) {
         transform.translation.y += -10.0;
     }
 

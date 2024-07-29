@@ -25,7 +25,8 @@ impl Plugin for AppPlugin {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         resolution: (config::WINDOW_WIDTH, config::WINDOW_HEIGHT).into(),
-                        mode: bevy::window::WindowMode::Windowed,
+                        // mode: bevy::window::WindowMode::Windowed,
+                        mode: bevy::window::WindowMode::BorderlessFullscreen,
                         title: "Mario".into(),
                         ..default()
                     }),
@@ -47,10 +48,8 @@ fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         transform: Transform {
             translation: Vec3::new(
-                (config::WINDOW_WIDTH - config::TILE_SIZE * 2.0) / scale_factor / 2.0
-                    - (config::TILE_SIZE / 2.0),
-                (config::WINDOW_HEIGHT - config::TILE_SIZE * 2.0) / scale_factor / 2.0
-                    - (config::TILE_SIZE / 2.0),
+                config::WINDOW_WIDTH  / 2.0 / scale_factor - config::TILE_SIZE/2.0,
+                config::WINDOW_HEIGHT  / 2.0 / scale_factor - config::TILE_SIZE/2.0,
                 1.0,
             ),
             scale: Vec3::new(1.0 / scale_factor, 1.0 / scale_factor, 2.0),

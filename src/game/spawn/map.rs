@@ -5,7 +5,7 @@ use bevy_ecs_tilemap::{
         geometry::get_tilemap_center_transform,
     },
     map::{TilemapId, TilemapSize, TilemapTexture, TilemapTileSize, TilemapType},
-    tiles::{TilePos, TileStorage, TileTextureIndex},
+    tiles::{TileBundle, TilePos, TileStorage, TileTextureIndex},
     TilemapBundle, TilemapPlugin,
 };
 
@@ -30,6 +30,7 @@ fn spawn_map(
     levels: ResMut<Assets<Level>>,
     gs: Res<GameState>,
 ) {
+    let texture_handle: Handle<Image> = textures_handles[&TextureKey::Tiles].clone_weak();
     let map_size = TilemapSize { x: 212, y: 15 };
     let mut tile_storage = TileStorage::empty(map_size);
     let tilemap_entity = commands.spawn_empty().id();
@@ -46,23 +47,33 @@ fn spawn_map(
             if let Some(style) = &tile.style {
                 for range in &tile.ranges {
                     match range[..] {
-                        [x1, x2, y1, y2] => fill_tilemap_rect(
-                            TileTextureIndex(2),
-                            TilePos {x: x1 as u32, y: y1 as u32},
-                            TilemapSize {x: x2 as u32, y: y2 as u32},
-                            TilemapId(tilemap_entity),
-                            &mut commands,
-                            &mut tile_storage,
-                        ),
+                        [x1, x2, y1, y2] => {
+                            for x in x1..x2 {
+                                for y in y1..y2 {
+                                    let tile_pos = TilePos {
+                                        x: x as u32,
+                                        y: y as u32,
+                                    };
+                                    let tile_entity = commands
+                                        .spawn(TileBundle {
+                                            position: tile_pos,
+                                            tilemap_id: TilemapId(tilemap_entity),
+                                            texture_index: TileTextureIndex(20),
+                                            ..Default::default()
+                                        })
+                                        .id();
+                                    tile_storage.set(&tile_pos, tile_entity);
+                                }
+                            }
+                        }
                         [x1, x2, y1] => {}
                         [x, y] => {}
                         _ => {}
-                    }
+                    };
                 }
             }
         }
     }
-    let texture_handle: Handle<Image> = textures_handles[&TextureKey::Tiles].clone_weak();
 
     let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
     let grid_size = tile_size.into();
@@ -75,7 +86,6 @@ fn spawn_map(
         storage: tile_storage,
         texture: TilemapTexture::Single(texture_handle.clone()),
         tile_size,
-        transform: get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0),
         ..Default::default()
     });
 }
