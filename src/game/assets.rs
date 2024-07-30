@@ -6,27 +6,29 @@ use bevy::{
 use bevy_common_assets::json::JsonAssetPlugin;
 use serde::Deserialize;
 
+use super::patterns::Pattern;
+
 #[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Level {
+pub struct LevelAsset {
     pub sprite_sheet: String,
     pub pattern_sheet: String,
     pub music_sheet: String,
     pub checkpoints: Vec<[u32; 2]>,
-    pub layers: Vec<LevelLayer>,
-    pub entities: Vec<LevelEntity>,
-    pub triggers: Vec<LevelTrigger>,
+    pub layers: Vec<LevelLayerAsset>,
+    pub entities: Vec<LevelEntityAsset>,
+    pub triggers: Vec<LevelTriggerAsset>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct LevelLayer {
-    pub tiles: Vec<LevelTile>,
+pub struct LevelLayerAsset {
+    pub tiles: Vec<LevelTileAsset>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct LevelTile {
+pub struct LevelTileAsset {
     pub style: Option<String>,
     pub pattern: Option<String>,
     pub behavior: Option<String>,
@@ -35,14 +37,14 @@ pub struct LevelTile {
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct LevelEntity {
+struct LevelEntityAsset {
     name: String,
     pos: [u32; 2],
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct LevelTrigger {
+struct LevelTriggerAsset {
     action: String,
     name: String,
     pos: [u32; 2],
@@ -50,24 +52,24 @@ struct LevelTrigger {
 
 #[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Sprite {
+pub struct SpriteAsset {
     image_url: String,
     tile_w: u8,
     tile_h: u8,
-    tiles: Vec<SpriteTile>,
-    animations: Vec<Animation>,
+    tiles: Vec<SpriteTileAsset>,
+    animations: Vec<AnimationAsset>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct SpriteTile {
+struct SpriteTileAsset {
     name: String,
     index: Option<[u8; 2]>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct Animation {
+struct AnimationAsset {
     name: String,
     frame_len: f32,
     frames: Vec<String>,
@@ -75,29 +77,29 @@ struct Animation {
 
 #[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Pattern {
-    patterns: HashMap<String, PatternTiles>,
+pub struct PatternAsset {
+    pub patterns: HashMap<String, PatternTilesAsset>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct PatternTiles {
-    tiles: Vec<PatternTile>,
+pub struct PatternTilesAsset {
+    pub tiles: Vec<PatternTileAsset>,
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct PatternTile {
-    style: Option<String>,
-    behaviour: Option<String>,
-    ranges: Vec<Vec<u32>>,
+pub struct PatternTileAsset {
+    pub style: Option<String>,
+    pub behaviour: Option<String>,
+    pub ranges: Vec<Vec<i32>>,
 }
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
-        JsonAssetPlugin::<Level>::new(&["level.json"]),
-        JsonAssetPlugin::<Pattern>::new(&["pattern.json"]),
-        JsonAssetPlugin::<Sprite>::new(&["sprite.json"]),
+        JsonAssetPlugin::<LevelAsset>::new(&["level.json"]),
+        JsonAssetPlugin::<PatternAsset>::new(&["pattern.json"]),
+        JsonAssetPlugin::<SpriteAsset>::new(&["sprite.json"]),
     ));
     app.register_type::<HandleMap<TextureKey>>();
     app.init_resource::<HandleMap<TextureKey>>();
@@ -147,7 +149,7 @@ pub enum LevelKey {
 }
 
 impl AssetKey for LevelKey {
-    type Asset = Level;
+    type Asset = LevelAsset;
 }
 
 impl FromWorld for HandleMap<LevelKey> {
@@ -173,11 +175,25 @@ impl FromWorld for HandleMap<LevelKey> {
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Reflect)]
 pub enum PatternKey {
     Overworld,
+    Underwater,
+    UnderWorld,
     Castle,
 }
 
+impl From<&str> for PatternKey {
+    fn from(value: &str) -> Self {
+        match value {
+            "overworld.pattern" => PatternKey::Overworld,
+            "castle.pattern" => PatternKey::Castle,
+            "underwater.pattern" => PatternKey::Underwater,
+            "underworld.pattern" => PatternKey::Overworld,
+            _ => PatternKey::Overworld,
+        }
+    }
+}
+
 impl AssetKey for PatternKey {
-    type Asset = Pattern;
+    type Asset = PatternAsset;
 }
 
 impl FromWorld for HandleMap<PatternKey> {
@@ -185,12 +201,20 @@ impl FromWorld for HandleMap<PatternKey> {
         let asset_server = world.resource::<AssetServer>();
         [
             (
+                PatternKey::Castle,
+                asset_server.load("patterns/castle.pattern.json"),
+            ),
+            (
                 PatternKey::Overworld,
                 asset_server.load("patterns/overworld.pattern.json"),
             ),
             (
-                PatternKey::Castle,
-                asset_server.load("patterns/castle.pattern.json"),
+                PatternKey::Underwater,
+                asset_server.load("patterns/underwater.pattern.json"),
+            ),
+            (
+                PatternKey::UnderWorld,
+                asset_server.load("patterns/underworld.pattern.json"),
             ),
         ]
         .into()
@@ -204,7 +228,7 @@ pub enum SpriteKey {
 }
 
 impl AssetKey for SpriteKey {
-    type Asset = Sprite;
+    type Asset = SpriteAsset;
 }
 
 impl FromWorld for HandleMap<SpriteKey> {

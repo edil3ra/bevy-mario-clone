@@ -4,7 +4,9 @@ use self::assets::LevelKey;
 
 pub mod assets;
 mod movement;
+pub mod patterns;
 pub mod spawn;
+pub mod tiles;
 
 #[derive(Resource, Default)]
 pub struct GameState {
