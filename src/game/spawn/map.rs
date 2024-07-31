@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use bevy_ecs_tilemap::{
     helpers::{
         filling::{fill_tilemap, fill_tilemap_rect},
@@ -10,7 +10,10 @@ use bevy_ecs_tilemap::{
 };
 
 use crate::game::{
-    assets::{HandleMap, LevelAsset, LevelKey, PatternAsset, PatternKey, TextureKey},
+    assets::{
+        HandleMap, LevelAsset, LevelKey, LevelLayerAsset, LevelTileAsset, PatternAsset, PatternKey,
+        PatternTilesAsset, TextureKey,
+    },
     tiles::OverWorld,
     GameState,
 };
@@ -43,7 +46,7 @@ fn spawn_map(
         .unwrap();
 
     for (index, layer) in level.layers.iter().enumerate() {
-        let map = commands
+        let map_entity = commands
             .spawn_empty()
             .insert((
                 SpatialBundle {
@@ -61,87 +64,15 @@ fn spawn_map(
             .unwrap()
             .patterns;
 
-        for tile in &layer.tiles {
-            if let Some(key) = tile.pattern.as_ref() {
-                let pattern = patterns.get(key).unwrap();
-
-                for range in &tile.ranges {
-                    match range[..] {
-                        [x, y] => {
-                            for pattern_tile in &pattern.tiles {
-                                let style = pattern_tile.style.as_ref();
-                                if style.is_none() {
-                                    break; // handle recursion later
-                                }
-                                let texture_index = TileTextureIndex(OverWorld::from(
-                                    style.unwrap().as_ref(),
-                                )
-                                    as u32);
-                                for pattern_range in &pattern_tile.ranges {
-                                    match pattern_range[..] {
-                                        [x_pattern, y_pattern] => {
-                                            let tile_pos = TilePos {
-                                                x: (x + x_pattern) as u32,
-                                                y: 14 - (y + y_pattern) as u32,
-                                            };
-                                            let tile_entity = commands
-                                                .spawn((
-                                                    TileBundle {
-                                                        position: tile_pos,
-                                                        tilemap_id: TilemapId(tilemap_entity),
-                                                        texture_index,
-                                                        ..Default::default()
-                                                    },
-                                                    Name::new(format!("x:{}-y:{}", x, y)),
-                                                ))
-                                                .id();
-                                            commands.entity(map).add_child(tile_entity);
-                                            tile_storage.set(&tile_pos, tile_entity);
-                                        }
-                                        _ => {}
-                                    }
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            if let Some(style) = tile.style.as_ref() {
-                for range in &tile.ranges {
-                    match range[..] {
-                        [x1, x2, y1, y2] => {
-                            for x in x1..x1 + x2 {
-                                for y in y1..y1 + y2 {
-                                    let tile_pos = TilePos {
-                                        x: x as u32,
-                                        y: 14 - y as u32,
-                                    };
-                                    let texture_index =
-                                        TileTextureIndex(OverWorld::from(style.as_ref()) as u32);
-                                    let tile_entity = commands
-                                        .spawn((
-                                            TileBundle {
-                                                position: tile_pos,
-                                                tilemap_id: TilemapId(tilemap_entity),
-                                                texture_index,
-                                                ..Default::default()
-                                            },
-                                            Name::new(format!("x:{}-y:{}", x, y)),
-                                        ))
-                                        .id();
-                                    commands.entity(map).add_child(tile_entity);
-                                    tile_storage.set(&tile_pos, tile_entity);
-                                }
-                            }
-                        }
-                        [x1, x2, y1] => {}
-                        [x, y] => {}
-                        _ => {}
-                    };
-                }
-            }
-        }
+        create_tiles(
+            &mut commands,
+            &layer.tiles,
+            patterns,
+            tilemap_entity,
+            map_entity,
+            &mut tile_storage,
+            None,
+        );
     }
 
     let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
@@ -157,4 +88,137 @@ fn spawn_map(
         tile_size,
         ..Default::default()
     });
+}
+
+fn create_tiles(
+    commands: &mut Commands,
+    tiles: &[LevelTileAsset],
+    patterns: &HashMap<String, PatternTilesAsset>,
+    tilemap_entity: Entity,
+    map_entity: Entity,
+    tile_storage: &mut TileStorage,
+    position: Option<&[i32]>,
+) {
+    for tile in tiles {
+        if let Some(key) = tile.pattern.as_ref() {
+            let pattern = patterns.get(key).unwrap();
+            for range_position in &tile.ranges {
+                let mut new_position: Vec<i32> = Vec::with_capacity(4);
+                if let Some(position) = position {
+                    new_position.push(
+                        *range_position.first().unwrap_or(&0) + *position.first().unwrap_or(&0),
+                    );
+                    new_position.push(
+                        *range_position.get(1).unwrap_or(&0) + *position.get(1).unwrap_or(&0),
+                    );
+                    new_position.push(
+                        *range_position.get(2).unwrap_or(&0) + *position.get(2).unwrap_or(&0),
+                    );
+                    new_position.push(
+                        *range_position.get(3).unwrap_or(&0) + *position.get(3).unwrap_or(&0),
+                    );
+                }
+                let new_position = if new_position.is_empty() {
+                    range_position.as_ref()
+                } else {
+                    new_position.as_ref()
+                };
+
+                create_tiles(
+                    commands,
+                    &pattern.tiles,
+                    patterns,
+                    tilemap_entity,
+                    map_entity,
+                    tile_storage,
+                    Some(new_position),
+                )
+            }
+        }
+        if tile.style.is_some() {
+            for range in &tile.ranges {
+                match range[..] {
+                    [x1, x2, y1, y2] => {
+                        for x in x1..x1 + x2 {
+                            for y in y1..y1 + y2 {
+                                let tile_pos = TilePos {
+                                    x: x as u32,
+                                    y: 14 - y as u32,
+                                };
+                                create_tile(
+                                    commands,
+                                    tile,
+                                    tile_pos,
+                                    tilemap_entity,
+                                    map_entity,
+                                    tile_storage,
+                                );
+                            }
+                        }
+                    }
+                    [x1, x2, y1] => {
+                        for x in x1..x1 + x2 {
+                            let tile_pos = TilePos {
+                                x: x as u32,
+                                y: 14 - y1 as u32,
+                            };
+                            create_tile(
+                                commands,
+                                tile,
+                                tile_pos,
+                                tilemap_entity,
+                                map_entity,
+                                tile_storage,
+                            );
+                        }
+                    }
+                    [x, y] => {
+                        let mut tile_pos = TilePos {
+                            x: x as u32,
+                            y: y as u32,
+                        };
+                        if let Some(position) = position {
+                            tile_pos.x += position[0] as u32;
+                            tile_pos.y += position[1] as u32;
+                        }
+                        tile_pos.y = 14 - tile_pos.y;
+                        create_tile(
+                            commands,
+                            tile,
+                            tile_pos,
+                            tilemap_entity,
+                            map_entity,
+                            tile_storage,
+                        );
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
+pub fn create_tile(
+    commands: &mut Commands,
+    tile: &LevelTileAsset,
+    tile_pos: TilePos,
+    tilemap_entity: Entity,
+    map_entity: Entity,
+    tile_storage: &mut TileStorage,
+) {
+    let texture_index =
+        TileTextureIndex(OverWorld::from(tile.style.as_ref().unwrap().as_ref()) as u32);
+    let tile_entity = commands
+        .spawn((
+            TileBundle {
+                position: tile_pos,
+                tilemap_id: TilemapId(tilemap_entity),
+                texture_index,
+                ..Default::default()
+            },
+            Name::new(format!("x:{}-y:{}", tile_pos.x, tile_pos.y)),
+        ))
+        .id();
+    commands.entity(map_entity).add_child(tile_entity);
+    tile_storage.set(&tile_pos, tile_entity);
 }

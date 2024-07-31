@@ -84,16 +84,16 @@ pub struct PatternAsset {
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PatternTilesAsset {
-    pub tiles: Vec<PatternTileAsset>,
+    pub tiles: Vec<LevelTileAsset>,
 }
 
-#[derive(Deserialize, TypePath, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct PatternTileAsset {
-    pub style: Option<String>,
-    pub behaviour: Option<String>,
-    pub ranges: Vec<Vec<i32>>,
-}
+// #[derive(Deserialize, TypePath, Default, Debug)]
+// #[serde(rename_all = "camelCase")]
+// pub struct PatternTileAsset {
+//     pub style: Option<String>,
+//     pub behaviour: Option<String>,
+//     pub ranges: Vec<Vec<i32>>,
+// }
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
