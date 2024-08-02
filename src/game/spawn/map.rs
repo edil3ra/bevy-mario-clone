@@ -11,14 +11,14 @@ use bevy_ecs_tilemap::{
 
 use crate::game::{
     assets::{
-        HandleMap, LevelAsset, LevelKey, LevelLayerAsset, LevelTileAsset, PatternAsset, PatternKey,
+        HandleMap, LevelAsset, LevelKey, LevelTileAsset, PatternAsset, PatternKey,
         PatternTilesAsset, TextureKey,
     },
     tiles::OverWorld,
     GameState,
 };
 
-const TILE_HEIGHT: u32 = 14;
+const MAP_HEIGHT: u32 = 14;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(TilemapPlugin);
@@ -148,7 +148,7 @@ fn create_tiles(
                 current_position.y += previous_position.y;
             }
             if tile.style.is_some() {
-                current_position.y = TILE_HEIGHT - current_position.y;
+                current_position.y = MAP_HEIGHT - current_position.y;
                 create_tile(
                     commands,
                     tile,
@@ -193,7 +193,10 @@ pub fn create_tile(
                 texture_index,
                 ..Default::default()
             },
-            Name::new(format!("x:{}-y:{}", tile_pos.x, tile_pos.y)),
+            Name::new(format!(
+                "(name: {}, x: {}, y: {})",
+                tile.style.as_ref().unwrap(), tile_pos.x, tile_pos.y
+            )),
         ))
         .id();
     commands.entity(map_entity).add_child(tile_entity);
