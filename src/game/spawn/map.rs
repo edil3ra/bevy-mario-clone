@@ -99,120 +99,77 @@ fn create_tiles(
     tilemap_entity: Entity,
     map_entity: Entity,
     tile_storage: &mut TileStorage,
-    position: Option<TilePos>,
+    previous_position: Option<TilePos>,
 ) {
     for tile in tiles {
+        let mut positions: Vec<(TilePos, &LevelTileAsset)> = Vec::with_capacity(0x64);
         for range in &tile.ranges {
             match range[..] {
                 [x1, x2, y1, y2] => {
                     for x in x1..x1 + x2 {
                         for y in y1..y1 + y2 {
-                            let mut tile_pos = TilePos {
-                                x: x as u32,
-                                y: y as u32,
-                            };
-                            if let Some(position) = position {
-                                tile_pos.x += position.x;
-                                tile_pos.y += position.y;
-                            }
-                            if tile.style.is_some() {
-                                tile_pos.y = TILE_HEIGHT - tile_pos.y;
-                                create_tile(
-                                    commands,
-                                    tile,
-                                    tile_pos,
-                                    tilemap_entity,
-                                    map_entity,
-                                    tile_storage,
-                                );
-                            }
-
-                            if let Some(key) = tile.pattern.as_ref() {
-                                let pattern = patterns.get(key).unwrap();
-                                create_tiles(
-                                    commands,
-                                    &pattern.tiles,
-                                    patterns,
-                                    tilemap_entity,
-                                    map_entity,
-                                    tile_storage,
-                                    Some(tile_pos),
-                                )
-                            }
+                            positions.push((
+                                TilePos {
+                                    x: x as u32,
+                                    y: y as u32,
+                                },
+                                tile,
+                            ));
                         }
                     }
                 }
-                [x1, x2, y1] => {
+                [x1, x2, y] => {
                     for x in x1..x1 + x2 {
-                        let mut tile_pos = TilePos {
-                            x: x as u32,
-                            y: y1 as u32,
-                        };
-                        if let Some(position) = position {
-                            tile_pos.x += position.x;
-                            tile_pos.y += position.y;
-                        }
-                        if tile.style.is_some() {
-                            tile_pos.y = TILE_HEIGHT - tile_pos.y;
-                            create_tile(
-                                commands,
-                                tile,
-                                tile_pos,
-                                tilemap_entity,
-                                map_entity,
-                                tile_storage,
-                            );
-                        }
-
-                        if let Some(key) = tile.pattern.as_ref() {
-                            let pattern = patterns.get(key).unwrap();
-                            create_tiles(
-                                commands,
-                                &pattern.tiles,
-                                patterns,
-                                tilemap_entity,
-                                map_entity,
-                                tile_storage,
-                                Some(tile_pos),
-                            )
-                        }
+                        positions.push((
+                            TilePos {
+                                x: x as u32,
+                                y: y as u32,
+                            },
+                            tile,
+                        ));
                     }
                 }
                 [x, y] => {
-                    let mut tile_pos = TilePos {
-                        x: x as u32,
-                        y: y as u32,
-                    };
-                    if let Some(position) = position {
-                        tile_pos.x += position.x;
-                        tile_pos.y += position.y;
-                    }
-                    if tile.style.is_some() {
-                        tile_pos.y = TILE_HEIGHT - tile_pos.y;
-                        create_tile(
-                            commands,
-                            tile,
-                            tile_pos,
-                            tilemap_entity,
-                            map_entity,
-                            tile_storage,
-                        );
-                    }
-
-                    if let Some(key) = tile.pattern.as_ref() {
-                        let pattern = patterns.get(key).unwrap();
-                        create_tiles(
-                            commands,
-                            &pattern.tiles,
-                            patterns,
-                            tilemap_entity,
-                            map_entity,
-                            tile_storage,
-                            Some(tile_pos),
-                        )
-                    }
+                    positions.push((
+                        TilePos {
+                            x: x as u32,
+                            y: y as u32,
+                        },
+                        tile,
+                    ));
                 }
                 _ => {}
+            }
+        }
+
+        for (mut current_position, tile) in positions {
+            if let Some(previous_position) = previous_position {
+                current_position.x += previous_position.x;
+                current_position.y += previous_position.y;
+            }
+            if tile.style.is_some() {
+                current_position.y = TILE_HEIGHT - current_position.y;
+                create_tile(
+                    commands,
+                    tile,
+                    current_position,
+                    tilemap_entity,
+                    map_entity,
+                    tile_storage,
+                );
+            }
+
+            if let Some(key) = tile.pattern.as_ref() {
+                let pattern = patterns.get(key).unwrap();
+                create_tiles(
+                    commands,
+                    &pattern.tiles,
+                    patterns,
+                    tilemap_entity,
+                    map_entity,
+                    tile_storage,
+                    Some(current_position),
+                )
             }
         }
     }
