@@ -18,6 +18,8 @@ use crate::game::{
     GameState,
 };
 
+const TILE_HEIGHT: u32 = 14;
+
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(TilemapPlugin);
     app.observe(spawn_map);
@@ -141,10 +143,16 @@ fn create_tiles(
                     [x1, x2, y1, y2] => {
                         for x in x1..x1 + x2 {
                             for y in y1..y1 + y2 {
-                                let tile_pos = TilePos {
+                                let mut tile_pos = TilePos {
                                     x: x as u32,
-                                    y: 14 - y as u32,
+                                    y: y as u32,
                                 };
+                                if let Some(position) = position {
+                                    tile_pos.x += position[0] as u32;
+                                    tile_pos.y += position[1] as u32;
+                                }
+                                tile_pos.y = TILE_HEIGHT - tile_pos.y;
+
                                 create_tile(
                                     commands,
                                     tile,
@@ -158,10 +166,16 @@ fn create_tiles(
                     }
                     [x1, x2, y1] => {
                         for x in x1..x1 + x2 {
-                            let tile_pos = TilePos {
+                            let mut tile_pos = TilePos {
                                 x: x as u32,
-                                y: 14 - y1 as u32,
+                                y: y1 as u32,
                             };
+                            if let Some(position) = position {
+                                tile_pos.x += position[0] as u32;
+                                tile_pos.y += position[1] as u32;
+                            }
+                            tile_pos.y = TILE_HEIGHT - tile_pos.y;
+
                             create_tile(
                                 commands,
                                 tile,
@@ -181,7 +195,7 @@ fn create_tiles(
                             tile_pos.x += position[0] as u32;
                             tile_pos.y += position[1] as u32;
                         }
-                        tile_pos.y = 14 - tile_pos.y;
+                        tile_pos.y = TILE_HEIGHT - tile_pos.y;
                         create_tile(
                             commands,
                             tile,
