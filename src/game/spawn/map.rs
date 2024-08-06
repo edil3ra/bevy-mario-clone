@@ -195,7 +195,9 @@ pub fn create_tile(
             },
             Name::new(format!(
                 "(name: {}, x: {}, y: {})",
-                tile.style.as_ref().unwrap(), tile_pos.x, tile_pos.y
+                tile.style.as_ref().unwrap(),
+                tile_pos.x,
+                tile_pos.y
             )),
         ))
         .id();
