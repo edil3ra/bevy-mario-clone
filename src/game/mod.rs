@@ -1,12 +1,12 @@
-use bevy::prelude::*;
-
-use self::assets::LevelKey;
-
 pub mod assets;
-mod movement;
+pub mod movement;
 pub mod patterns;
 pub mod spawn;
 pub mod tiles;
+
+use bevy::prelude::*;
+
+use self::assets::LevelKey;
 
 #[derive(Resource, Default)]
 pub struct GameState {

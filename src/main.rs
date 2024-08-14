@@ -1,6 +1,7 @@
 mod config;
 mod dev_tools;
 mod game;
+mod physics;
 mod screen;
 mod ui;
 use bevy::prelude::*;
@@ -35,7 +36,7 @@ impl Plugin for AppPlugin {
                 .set(ImagePlugin::default_nearest()),
         );
 
-        app.add_plugins((game::plugin, screen::plugin, ui::plugin));
+        app.add_plugins((game::plugin, screen::plugin, ui::plugin, physics::plugin));
         app.add_systems(Startup, spawn_camera);
 
         #[cfg(feature = "dev")]
