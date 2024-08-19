@@ -1,21 +1,11 @@
-use crate::game::SettingsState;
-use crate::AppSet;
-use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 use bevy::{color::palettes, math::Vec4Swizzles};
 use bevy_ecs_tilemap::{
     map::{TilemapGridSize, TilemapSize, TilemapType},
     tiles::{TilePos, TileStorage},
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins(
-        WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)),
-    );
-    app.add_systems(Update, toggle_fullscreen.in_set(AppSet::RecordInput));
-    app.add_systems(Update, move_camera.in_set(AppSet::Update));
-
     app.init_resource::<CursorPos>()
         .init_resource::<FontHandle>();
 
@@ -55,7 +45,6 @@ impl Default for CursorPos {
     }
 }
 
-// We need to keep the cursor position updated based on any `CursorMoved` events.
 pub fn update_cursor_pos(
     camera_q: Query<(&GlobalTransform, &Camera)>,
     mut cursor_moved_events: EventReader<CursorMoved>,
@@ -167,86 +156,5 @@ fn highlight_tile_labels(
                 }
             }
         }
-    }
-}
-
-fn toggle_fullscreen(
-    mut settings: ResMut<SettingsState>,
-    input: Res<ButtonInput<KeyCode>>,
-    mut windows: Query<&mut Window>,
-) {
-    let mut window = windows.single_mut();
-    if input.just_pressed(KeyCode::F12) {
-        settings.is_fullscreen = !settings.is_fullscreen;
-        window.set_maximized(settings.is_fullscreen);
-    }
-}
-
-fn move_camera(
-    time: Res<Time>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Transform, &mut OrthographicProjection), With<Camera>>,
-) {
-    // let mut transform = query.get_single_mut().unwrap();
-    // if keyboard_input.pressed(KeyCode::KeyJ) {
-    //     transform.translation.x += -10.0;
-    // }
-
-    // if keyboard_input.pressed(KeyCode::KeyL) {
-    //     transform.translation.x += 10.0;
-    // }
-
-    // if keyboard_input.pressed(KeyCode::KeyI) {
-    //     transform.translation.y += 10.0;
-    // }
-
-    // if keyboard_input.pressed(KeyCode::KeyK) {
-    //     transform.translation.y += -10.0;
-    // }
-
-    // if keyboard_input.pressed(KeyCode::Digit1) {
-    //     transform.scale *= 0.8;
-    // }
-
-    // if keyboard_input.pressed(KeyCode::Digit2) {
-    //     transform.scale *= 1.2;
-    // }
-
-    for (mut transform, mut ortho) in query.iter_mut() {
-        let mut direction = Vec3::ZERO;
-
-        if keyboard_input.pressed(KeyCode::KeyJ) {
-            direction -= Vec3::new(1.0, 0.0, 0.0);
-        }
-
-        if keyboard_input.pressed(KeyCode::KeyL) {
-            direction += Vec3::new(1.0, 0.0, 0.0);
-        }
-
-        if keyboard_input.pressed(KeyCode::KeyI) {
-            direction += Vec3::new(0.0, 1.0, 0.0);
-        }
-
-        if keyboard_input.pressed(KeyCode::KeyK) {
-            direction -= Vec3::new(0.0, 1.0, 0.0);
-        }
-
-        if keyboard_input.pressed(KeyCode::KeyZ) {
-            ortho.scale += 0.1;
-        }
-
-        if keyboard_input.pressed(KeyCode::KeyX) {
-            ortho.scale -= 0.1;
-        }
-
-        if ortho.scale < 0.5 {
-            ortho.scale = 0.5;
-        }
-
-        let z = transform.translation.z;
-        transform.translation += time.delta_seconds() * direction * 500.;
-        // Important! We need to restore the Z values when moving the camera around.
-        // Bevy has a specific camera setup and this can mess with how our layers are shown.
-        transform.translation.z = z;
     }
 }

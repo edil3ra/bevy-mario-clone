@@ -150,12 +150,16 @@ fn integrate(
     }
 }
 
-fn solve_pos(mut query: Query<(Entity, &mut Pos, &CircleCollider, &Mass)>, mut contacts: ResMut<Contacts>) {
+fn solve_pos(
+    mut query: Query<(Entity, &mut Pos, &CircleCollider, &Mass)>,
+    mut contacts: ResMut<Contacts>,
+) {
     contacts.0.clear();
     let mut combinations = query.iter_combinations_mut();
 
-    while let Some([(entity_a, mut pos_a, circle_a, mass_a), (entity_b, mut pos_b, circle_b, mass_b)]) =
-        combinations.fetch_next()
+    while let Some(
+        [(entity_a, mut pos_a, circle_a, mass_a), (entity_b, mut pos_b, circle_b, mass_b)],
+    ) = combinations.fetch_next()
     {
         let ab = pos_b.0 - pos_a.0;
         let combined_radius = circle_a.radius + circle_b.radius;
@@ -179,8 +183,10 @@ fn update_vel(mut query: Query<(&Pos, &PrevPos, &mut Vel)>) {
     }
 }
 
-
-fn solve_vel(query: Query<(&mut Vel, &PreSolveVel, &Pos, &Mass, &Restitution)>, contacts: Res<Contacts>) {
+fn solve_vel(
+    query: Query<(&mut Vel, &PreSolveVel, &Pos, &Mass, &Restitution)>,
+    contacts: Res<Contacts>,
+) {
     for (entity_a, entity_b) in contacts.0.iter().cloned() {
         let (
             (mut vel_a, pre_solve_vel_a, pos_a, mass_a, restitution_a),
@@ -209,7 +215,6 @@ fn solve_vel(query: Query<(&mut Vel, &PreSolveVel, &Pos, &Mass, &Restitution)>, 
         vel_b.0 -= n * (-normal_vel - restitution * pre_solve_normal_vel) * w_b / w_sum;
     }
 }
-
 
 pub fn sync_transforms(mut query: Query<(&mut bevy::transform::components::Transform, &Pos)>) {
     for (mut transform, pos) in query.iter_mut() {
