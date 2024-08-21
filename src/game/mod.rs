@@ -1,6 +1,5 @@
 pub mod assets;
 pub mod movement;
-pub mod patterns;
 pub mod spawn;
 pub mod tiles;
 

@@ -6,8 +6,6 @@ use bevy::{
 use bevy_common_assets::json::JsonAssetPlugin;
 use serde::Deserialize;
 
-use super::patterns::Pattern;
-
 #[derive(Deserialize, Asset, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct LevelAsset {
@@ -86,14 +84,6 @@ pub struct PatternAsset {
 pub struct PatternTilesAsset {
     pub tiles: Vec<LevelTileAsset>,
 }
-
-// #[derive(Deserialize, TypePath, Default, Debug)]
-// #[serde(rename_all = "camelCase")]
-// pub struct PatternTileAsset {
-//     pub style: Option<String>,
-//     pub behaviour: Option<String>,
-//     pub ranges: Vec<Vec<i32>>,
-// }
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
@@ -241,7 +231,7 @@ impl FromWorld for HandleMap<SpriteKey> {
             ),
             (
                 SpriteKey::Mario,
-                asset_server.load("sprites/castle.sprite.json"),
+                asset_server.load("sprites/mario.sprite.json"),
             ),
         ]
         .into()

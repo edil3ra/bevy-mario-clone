@@ -98,7 +98,7 @@ impl DynamicBoxBundle {
     pub fn new_with_pos_and_vel(pos: Vec2, vel: Vec2) -> Self {
         Self {
             pos: Pos(pos),
-            prev_pos: PrevPos(pos - vel * SUB_DT),
+            prev_pos: PrevPos(pos - vel),
             vel: Vel(vel),
             ..Default::default()
         }
