@@ -23,7 +23,7 @@ pub(super) fn plugin(app: &mut App) {
         .add_plugins(bevy_egui::EguiPlugin);
     app.insert_resource(UiState::new());
     app.add_systems(PostStartup, setup);
-    
+
     app.add_systems(
         PostUpdate,
         show_ui_system
@@ -38,7 +38,7 @@ pub(super) fn plugin(app: &mut App) {
     .register_type::<AlphaMode>();
 }
 
-fn setup(mut cameras: Query<&mut OrthographicProjection, With<MainCamera>>,) {
+fn setup(mut cameras: Query<&mut OrthographicProjection, With<MainCamera>>) {
     let mut projection = cameras.single_mut();
     projection.scale += 0.3;
 }
@@ -98,11 +98,11 @@ fn set_camera_viewport(
     mut cameras: Query<&mut Camera, With<MainCamera>>,
 ) {
     let mut cam = cameras.single_mut();
-    
+
     let Ok(window) = primary_window.get_single() else {
         return;
     };
-    
+
     let scale_factor = window.scale_factor() * egui_settings.scale_factor;
 
     let viewport_pos = ui_state.viewport_rect.left_top().to_vec2() * scale_factor;
