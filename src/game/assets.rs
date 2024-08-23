@@ -97,8 +97,8 @@ pub(super) fn plugin(app: &mut App) {
     app.register_type::<HandleMap<LevelKey>>();
     app.init_resource::<HandleMap<LevelKey>>();
 
-    app.register_type::<HandleMap<SpriteKey>>();
-    app.init_resource::<HandleMap<SpriteKey>>();
+    // app.register_type::<HandleMap<SpriteKey>>();
+    // app.init_resource::<HandleMap<SpriteKey>>();
 
     app.register_type::<HandleMap<PatternKey>>();
     app.init_resource::<HandleMap<PatternKey>>();

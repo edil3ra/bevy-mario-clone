@@ -27,12 +27,12 @@ fn all_assets_loaded(
     asset_server: Res<AssetServer>,
     texture_handles: Res<HandleMap<TextureKey>>,
     level_handles: Res<HandleMap<LevelKey>>,
-    sprite_handles: Res<HandleMap<SpriteKey>>,
+    // sprite_handles: Res<HandleMap<SpriteKey>>,
     pattern_handles: Res<HandleMap<PatternKey>>,
 ) -> bool {
     texture_handles.all_loaded(&asset_server)
         && level_handles.all_loaded(&asset_server)
-        && sprite_handles.all_loaded(&asset_server)
+        // && sprite_handles.all_loaded(&asset_server)
         && pattern_handles.all_loaded(&asset_server)
 }
 

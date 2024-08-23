@@ -52,7 +52,6 @@ fn spawn_map(
             .spawn_empty()
             .insert((
                 SpatialBundle {
-                    transform: Transform::from_xyz(0.0, 0., 0.),
                     ..Default::default()
                 },
                 Name::new(format!("layer-{}", index)),

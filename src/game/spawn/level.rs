@@ -12,7 +12,7 @@ pub(super) fn plugin(app: &mut App) {
 pub struct SpawnLevel;
 
 fn spawn_level(_trigger: Trigger<SpawnLevel>, mut commands: Commands) {
-    commands.trigger(SpawnPlayer);
     commands.trigger(SpawnMap);
+    commands.trigger(SpawnPlayer);
     // commands.trigger(SpawnTileLabelsDebug);
 }
