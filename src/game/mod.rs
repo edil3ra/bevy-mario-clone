@@ -1,4 +1,5 @@
 pub mod assets;
+pub mod entities;
 pub mod movement;
 pub mod spawn;
 pub mod tiles;
@@ -25,5 +26,10 @@ pub(super) fn plugin(app: &mut App) {
         is_fullscreen: false,
     });
 
-    app.add_plugins((assets::plugin, movement::plugin, spawn::plugin));
+    app.add_plugins((
+        assets::plugin,
+        movement::plugin,
+        spawn::plugin,
+        entities::plugin,
+    ));
 }

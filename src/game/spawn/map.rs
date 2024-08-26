@@ -9,16 +9,17 @@ use bevy_ecs_tilemap::{
     TilemapBundle, TilemapPlugin,
 };
 
-use crate::game::{
-    assets::{
-        HandleMap, LevelAsset, LevelKey, LevelTileAsset, PatternAsset, PatternKey,
-        PatternTilesAsset, TextureKey,
+use crate::{
+    config::MAP_HEIGHT,
+    game::{
+        assets::{
+            HandleMap, LevelAsset, LevelKey, LevelTileAsset, PatternAsset, PatternKey,
+            PatternTilesAsset, TextureKey,
+        },
+        tiles::OverWorld,
+        GameState,
     },
-    tiles::OverWorld,
-    GameState,
 };
-
-const MAP_HEIGHT: u32 = 14;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(TilemapPlugin);

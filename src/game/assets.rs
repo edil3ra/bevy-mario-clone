@@ -35,9 +35,9 @@ pub struct LevelTileAsset {
 
 #[derive(Deserialize, TypePath, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-struct LevelEntityAsset {
-    name: String,
-    pos: [u32; 2],
+pub struct LevelEntityAsset {
+    pub name: String,
+    pub pos: [u32; 2],
 }
 
 #[derive(Deserialize, TypePath, Default, Debug)]

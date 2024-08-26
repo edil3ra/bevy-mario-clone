@@ -48,13 +48,13 @@ impl Plugin for AppPlugin {
 }
 
 fn spawn_camera(mut commands: Commands) {
-    let scale_factor = config::WINDOW_HEIGHT / config::TILE_SIZE / config::TILE_MAX_HEIGHT;
+    let scale_factor = config::WINDOW_HEIGHT / config::TILE_SIZE as f32 / config::TILE_MAX_HEIGHT;
     commands.spawn((
         Camera2dBundle {
             transform: Transform {
                 translation: Vec3::new(
-                    config::WINDOW_WIDTH / 2.0 / scale_factor - config::TILE_SIZE / 2.0,
-                    config::WINDOW_HEIGHT / 2.0 / scale_factor - config::TILE_SIZE / 2.0,
+                    config::WINDOW_WIDTH / 2.0 / scale_factor - config::TILE_SIZE as f32 / 2.0,
+                    config::WINDOW_HEIGHT / 2.0 / scale_factor - config::TILE_SIZE as f32 / 2.0,
                     1.0,
                 ),
                 scale: Vec3::new(1.0 / scale_factor, 1.0 / scale_factor, 2.0),

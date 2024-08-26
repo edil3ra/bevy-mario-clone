@@ -8,23 +8,10 @@ use crate::{
     screen::Screen,
 };
 
-pub(super) fn plugin(app: &mut App) {
-    app.add_systems(OnEnter(Screen::Loading), setup_player);
-    app.observe(spawn_player);
-    app.register_type::<Player>();
-}
+use super::{EntityKey, Player, TextureAtlasLayoutEntities};
 
 #[derive(Resource)]
 struct PlayerAtlasLayout(Handle<TextureAtlasLayout>);
-
-#[derive(Event, Debug)]
-pub struct SpawnPlayer;
-
-#[derive(Component, Debug, Clone, PartialEq, Eq, Default, Reflect)]
-#[reflect(Component)]
-pub struct Player {
-    current_frame: Frame,
-}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Reflect)]
 enum Frame {
@@ -52,7 +39,7 @@ enum Frame {
     CrouchLarge,
 }
 
-const FRAMES_RECT: [[u32; 4]; 21] = [
+pub const FRAMES_RECT_PLAYER: [[u32; 4]; 21] = [
     [0, 88, 16, 16],
     [16, 88, 16, 16],
     [32, 88, 16, 16],
@@ -76,44 +63,27 @@ const FRAMES_RECT: [[u32; 4]; 21] = [
     [0, 120, 16, 32],
 ];
 
-fn setup_player(
-    mut commands: Commands,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    let mut layout = TextureAtlasLayout::new_empty(UVec2::new(29 * 8, 29 * 8));
-    for frame_rect in FRAMES_RECT {
-        layout.add_texture(URect::new(
-            frame_rect[0],
-            frame_rect[1],
-            frame_rect[0] + frame_rect[2],
-            frame_rect[1] + frame_rect[3],
-        ));
-    }
-    let handle = texture_atlas_layouts.add(layout);
-    commands.insert_resource(PlayerAtlasLayout(handle));
-}
-
-fn spawn_player(
-    _trigger: Trigger<SpawnPlayer>,
-    mut commands: Commands,
-    image_handles: Res<HandleMap<TextureKey>>,
-    atlas_handle: ResMut<PlayerAtlasLayout>,
+pub fn spawn_player(
+    commands: &mut Commands,
+    image_handles: &Res<HandleMap<TextureKey>>,
+    atlas_layout_handles: &ResMut<TextureAtlasLayoutEntities>,
+    key: EntityKey,
+    pos_x: u32,
+    pos_y: u32,
 ) {
     commands.spawn((
-        Name::new("Player"),
-        Player {
-            current_frame: Frame::Idle,
-        },
+        Name::new(key.to_string().to_string()),
+        Player {},
         SpriteBundle {
             texture: image_handles[&TextureKey::Entities].clone_weak(),
             transform: Transform {
-                translation: Vec3::new(100., 100., 1.),
+                translation: Vec3::new(pos_x as f32, pos_y as f32, 1.),
                 ..Default::default()
             },
             ..Default::default()
         },
         TextureAtlas {
-            layout: atlas_handle.0.clone(),
+            layout: atlas_layout_handles.0[&key].clone(),
             index: Frame::Idle as usize,
         },
         MovementController::default(),
