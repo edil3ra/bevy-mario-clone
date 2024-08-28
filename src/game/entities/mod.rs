@@ -1,5 +1,5 @@
-mod goomba;
-mod player;
+pub mod goomba;
+pub mod player;
 
 use bevy::{prelude::*, utils::hashbrown::HashMap};
 

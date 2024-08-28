@@ -3,6 +3,7 @@ pub mod entities;
 pub mod movement;
 pub mod spawn;
 pub mod tiles;
+pub mod animate;
 
 use bevy::prelude::*;
 
@@ -31,5 +32,6 @@ pub(super) fn plugin(app: &mut App) {
         movement::plugin,
         spawn::plugin,
         entities::plugin,
+        animate::plugin,
     ));
 }
