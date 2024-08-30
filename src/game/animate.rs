@@ -1,9 +1,8 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
 use crate::game::entities::player::PlayerAnimation;
 use crate::AppSet;
-
+use bevy::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
     // Animate and play sound effects based on controls.
@@ -11,23 +10,18 @@ pub(super) fn plugin(app: &mut App) {
         Update,
         (
             update_animation_timer::<PlayerAnimation>.in_set(AppSet::TickTimers),
-            (
-                update_animation_atlas::<PlayerAnimation>,
-            )
+            (update_animation_atlas::<PlayerAnimation>,)
                 .chain()
                 .in_set(AppSet::Update),
         ),
     );
 }
 
-
-
 pub trait Animate {
     fn changed(&self) -> bool;
     fn get_atlas_index(&self) -> usize;
-    fn update_timer(&mut self, delta: Duration); 
+    fn update_timer(&mut self, delta: Duration);
 }
-
 
 fn update_animation_timer<T: Animate + Component>(time: Res<Time>, mut query: Query<&mut T>) {
     for mut animation in &mut query {

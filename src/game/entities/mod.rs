@@ -6,12 +6,12 @@ use bevy::{prelude::*, utils::hashbrown::HashMap};
 use crate::{
     config::{MAP_HEIGHT, TILE_SIZE},
     game::assets::{HandleMap, TextureKey},
-    screen::Screen,
+    screen::Screen, AppSet,
 };
 
 use self::{
     goomba::{spawn_goomba, FRAMES_RECT_GOOMBA_BROWN},
-    player::{spawn_player, FRAMES_RECT_PLAYER},
+    player::{jump, spawn_player, FRAMES_RECT_PLAYER},
 };
 
 use super::{
@@ -21,6 +21,7 @@ use super::{
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::Loading), setup_entities);
+    app.add_systems(Update, (jump).in_set(AppSet::Update));
     app.observe(spawn_entities);
 }
 

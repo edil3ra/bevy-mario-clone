@@ -5,6 +5,7 @@ mod physics;
 mod screen;
 mod ui;
 use bevy::prelude::*;
+use seldom_state::StateMachinePlugin;
 
 #[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum AppSet {
@@ -38,7 +39,7 @@ impl Plugin for AppPlugin {
                 })
                 .set(ImagePlugin::default_nearest()),
         );
-
+        app.add_plugins(StateMachinePlugin);
         app.add_plugins((game::plugin, screen::plugin, ui::plugin, physics::plugin));
         app.add_systems(Startup, spawn_camera);
 

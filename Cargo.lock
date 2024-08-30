@@ -2760,6 +2760,7 @@ dependencies = [
  "egui_dock",
  "lazy_static",
  "log",
+ "seldom_state",
  "serde",
  "serde_json",
  "transform-gizmo-egui",
@@ -3697,6 +3698,16 @@ dependencies = [
  "memmap2",
  "smithay-client-toolkit",
  "tiny-skia",
+]
+
+[[package]]
+name = "seldom_state"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54d24dafdd047875e7ae44049f35cc0e83816d6d8a08c7c0a79a21fe74cf50a7"
+dependencies = [
+ "bevy",
+ "either",
 ]
 
 [[package]]

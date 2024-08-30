@@ -16,13 +16,13 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 #[derive(Reflect, Debug)]
-pub enum Direction {
+pub enum ControllerDirection {
     Idle,
     Left,
     Right,
 }
 
-impl Default for Direction {
+impl Default for ControllerDirection {
     fn default() -> Self {
         Self::Idle
     }
@@ -31,13 +31,22 @@ impl Default for Direction {
 #[derive(Debug, Default, Component, Reflect)]
 #[reflect(Component)]
 pub struct MovementController {
-    direction: Direction,
-    jump: bool,
+    pub moving: ControllerDirection,
+    pub jumping: bool,
+    pub running: bool,
 }
 impl MovementController {
     fn reset(&mut self) {
-        self.direction = Direction::default();
-        self.jump = false;
+        self.moving = ControllerDirection::default();
+        self.jumping = false;
+    }
+
+    pub fn is_moving(&self) -> bool {
+        match self.moving {
+            ControllerDirection::Idle => false,
+            ControllerDirection::Left => true,
+            ControllerDirection::Right => true,
+        }
     }
 }
 
@@ -55,14 +64,17 @@ fn record_movement_controller(
     for mut controller in &mut controller_query {
         controller.reset();
         if input.pressed(KeyCode::ArrowLeft) && input.pressed(KeyCode::ArrowRight) {
-            controller.direction = Direction::Idle;
+            controller.moving = ControllerDirection::Idle;
         } else if input.pressed(KeyCode::ArrowLeft) {
-            controller.direction = Direction::Left;
+            controller.moving = ControllerDirection::Left;
         } else if input.pressed(KeyCode::ArrowRight) {
-            controller.direction = Direction::Right;
+            controller.moving = ControllerDirection::Right;
         }
         if input.pressed(KeyCode::Space) {
-            controller.jump = true
+            controller.jumping = true
+        }
+        if input.pressed(KeyCode::ShiftLeft) {
+            controller.running = true
         }
     }
 }
@@ -72,10 +84,10 @@ fn apply_movement(time: Res<Time>, mut query: Query<(&mut Physics, &MovementCont
     for (mut physics, intention) in &mut query {
         let abs_x = physics.velocity.x.abs();
         let mut distance = 0.0; // will be used later
-        let direction = match intention.direction {
-            Direction::Idle => 0,
-            Direction::Left => -1,
-            Direction::Right => 1,
+        let direction = match intention.moving {
+            ControllerDirection::Idle => 0,
+            ControllerDirection::Left => -1,
+            ControllerDirection::Right => 1,
         };
 
         if direction == 0 {

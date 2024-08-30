@@ -1,16 +1,18 @@
-use std::time::Duration;
+use std::{borrow::Borrow, time::Duration};
 
 use bevy::prelude::*;
+use seldom_state::prelude::*;
 
 use crate::{
     game::{
-        animate::Animate, assets::{HandleMap, TextureKey}, movement::{MovementController, Physics}
+        animate::Animate,
+        assets::{HandleMap, TextureKey},
+        movement::{ControllerDirection, MovementController, Physics},
     },
     screen::Screen,
 };
 
 use super::{EntityKey, Player, TextureAtlasLayoutEntities};
-
 
 pub const FRAMES_RECT_PLAYER: [[u32; 4]; 21] = [
     [0, 88, 16, 16],
@@ -35,7 +37,6 @@ pub const FRAMES_RECT_PLAYER: [[u32; 4]; 21] = [
     [192, 88, 16, 32],
     [0, 120, 16, 32],
 ];
-
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Reflect)]
 enum Frame {
@@ -63,17 +64,13 @@ enum Frame {
     CrouchLarge = 20,
 }
 
-
-
-
-        
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 pub struct PlayerAnimation<'a> {
     timer: Timer,
     state: PlayerAnimationState,
     frame: usize,
-    frames: &'a[Frame]
+    frames: &'a [Frame],
 }
 
 #[derive(Reflect, PartialEq)]
@@ -94,38 +91,27 @@ pub enum PlayerAnimationState {
     CroucheLarge,
 }
 
-
-// [{'name': 'run', 'frameLen': 6, 'frames': ['run-1', 'run-2', 'run-3']},
-//  {'name': 'climb', 'frameLen': 4, 'frames': ['climb-1', 'climb-2']},
-//  {'name': 'swim-idle', 'frameLen': 4, 'frames': ['swim-1', 'swim-2']},
-//  {'name': 'swim', 'frameLen': 6, 'frames': ['swim-3', 'swim-4', 'swim-5']},
-//  {'name': 'run-large',
-//   'frameLen': 6,
-//   'frames': ['run-1-large', 'run-2-large', 'run-3-large']}]
-
-
-impl <'a> PlayerAnimation<'a> {
+impl<'a> PlayerAnimation<'a> {
     const SHORT_DURATION: Duration = Duration::from_millis(1000 / 4);
     const LONG_DURATION: Duration = Duration::from_millis(1000 / 6);
     const VERY_LONG_DURATION: Duration = Duration::from_millis(10000);
-    
 
-    const IDLE_FRAMES: &'a[Frame] = &[Frame::Idle];
-    const RUN_FRAMES: &'a[Frame] = &[Frame::Run1,Frame::Run2, Frame::Run3];
-    const BREAK_FRAMES: &'a[Frame] = &[Frame::Break];
-    const JUMP_FRAMES: &'a[Frame] = &[Frame::Jump];
-    const DIE_FRAMES: &'a[Frame] = &[Frame::Die];
-    const CLIMB_FRAMES: &'a[Frame] = &[Frame::Climb1, Frame::Climb2 ];
-    const SWIM_FRAMES: &'a[Frame] = &[Frame::Swim1, Frame::Swim2, Frame::Swim3, Frame::Swim4];
-    const IDLE_LARGE_FRAMES: &'a[Frame] = &[Frame::IdleLarge];
-    const RUN_LARGE_FRAMES: &'a[Frame] = &[Frame::Run1Large, Frame::Run2Large, Frame::Run3Large];
-    const BREAK_LARGE_FRAMES: &'a[Frame] = &[Frame::BreakLarge];
-    const JUMP_LARGE_FRAMES: &'a[Frame] = &[Frame::JumpLarge];
-    const CLIMB_LARGE_FRAMES: &'a[Frame] = &[Frame::Climb1, Frame::Climb2];
-    const SWIM_LARGE_FRAMES: &'a[Frame] = &[Frame::Swim1, Frame::Swim2, Frame::Swim3, Frame::Swim4];
-    const CROUCH_LARGE_FRAMES: &'a[Frame] = &[Frame::CrouchLarge];
-    
-    
+    const IDLE_FRAMES: &'a [Frame] = &[Frame::Idle];
+    const RUN_FRAMES: &'a [Frame] = &[Frame::Run1, Frame::Run2, Frame::Run3];
+    const BREAK_FRAMES: &'a [Frame] = &[Frame::Break];
+    const JUMP_FRAMES: &'a [Frame] = &[Frame::Jump];
+    const DIE_FRAMES: &'a [Frame] = &[Frame::Die];
+    const CLIMB_FRAMES: &'a [Frame] = &[Frame::Climb1, Frame::Climb2];
+    const SWIM_FRAMES: &'a [Frame] = &[Frame::Swim1, Frame::Swim2, Frame::Swim3, Frame::Swim4];
+    const IDLE_LARGE_FRAMES: &'a [Frame] = &[Frame::IdleLarge];
+    const RUN_LARGE_FRAMES: &'a [Frame] = &[Frame::Run1Large, Frame::Run2Large, Frame::Run3Large];
+    const BREAK_LARGE_FRAMES: &'a [Frame] = &[Frame::BreakLarge];
+    const JUMP_LARGE_FRAMES: &'a [Frame] = &[Frame::JumpLarge];
+    const CLIMB_LARGE_FRAMES: &'a [Frame] = &[Frame::Climb1, Frame::Climb2];
+    const SWIM_LARGE_FRAMES: &'a [Frame] =
+        &[Frame::Swim1, Frame::Swim2, Frame::Swim3, Frame::Swim4];
+    const CROUCH_LARGE_FRAMES: &'a [Frame] = &[Frame::CrouchLarge];
+
     fn idling() -> Self {
         Self {
             timer: Timer::new(Self::VERY_LONG_DURATION, TimerMode::Repeating),
@@ -134,7 +120,6 @@ impl <'a> PlayerAnimation<'a> {
             frame: 0,
         }
     }
-
 
     fn running() -> Self {
         Self {
@@ -148,8 +133,6 @@ impl <'a> PlayerAnimation<'a> {
     pub fn new() -> Self {
         Self::idling()
     }
-
-
 
     pub fn update_state(&mut self, state: PlayerAnimationState) {
         if self.state != state {
@@ -173,13 +156,13 @@ impl <'a> PlayerAnimation<'a> {
     }
 }
 
-impl<'a> Animate for PlayerAnimation<'a>{
+impl<'a> Animate for PlayerAnimation<'a> {
     fn changed(&self) -> bool {
         self.timer.finished()
     }
 
     fn get_atlas_index(&self) -> usize {
-        self.frames[self.frame]  as usize
+        self.frames[self.frame] as usize
     }
 
     fn update_timer(&mut self, delta: Duration) {
@@ -191,8 +174,40 @@ impl<'a> Animate for PlayerAnimation<'a>{
     }
 }
 
+#[derive(Debug, Default, Clone, Reflect)]
+enum Direction {
+    #[default]
+    Left,
+    Right,
+}
 
+#[derive(Debug, Default, Component, Reflect, Clone)]
+#[reflect(Component)]
+pub struct Idling;
 
+#[derive(Debug, Default, Component, Reflect, Clone)]
+#[reflect(Component)]
+pub struct Walking {
+    speed: f32,
+    direction: Direction,
+}
+
+#[derive(Debug, Default, Clone, Component, Reflect)]
+#[reflect(Component)]
+pub struct Running {
+    speed: f32,
+    direction: Direction,
+}
+
+#[derive(Debug, Default, Clone, Component, Reflect)]
+#[reflect(Component)]
+pub struct Jumping {
+    impulse: f32,
+}
+
+#[derive(Debug, Default, Clone, Component, Reflect)]
+#[reflect(Component)]
+pub struct Falling;
 
 pub fn spawn_player(
     commands: &mut Commands,
@@ -202,10 +217,65 @@ pub fn spawn_player(
     pos_x: u32,
     pos_y: u32,
 ) {
+    let is_walking = move |In(entity): In<Entity>, query: Query<&MovementController>| {
+        let movement = query.get(entity).unwrap();
+        if movement.is_moving() && !movement.jumping && !movement.running {
+            match movement.moving {
+                ControllerDirection::Idle => return None,
+                ControllerDirection::Left => return Some(Direction::Left),
+                ControllerDirection::Right => return Some(Direction::Right),
+            }
+        }
+        None
+    };
+
+    let is_running = move |In(entity): In<Entity>, query: Query<&MovementController>| {
+        let movement = query.get(entity).unwrap();
+        if movement.is_moving() && !movement.jumping && movement.running {
+            match movement.moving {
+                ControllerDirection::Idle => return None,
+                ControllerDirection::Left => return Some(Direction::Left),
+                ControllerDirection::Right => return Some(Direction::Right),
+            }
+        }
+        None
+    };
+
+    let is_jumping = move |In(entity): In<Entity>, query: Query<&MovementController>| {
+        let movement = query.get(entity).unwrap();
+        if movement.jumping {
+            return Some(true);
+        }
+        None
+    };
+
+    let player_state = StateMachine::default()
+        .trans_builder(is_walking, |_: &Idling, direction| {
+            Some(Walking {
+                speed: 1.0,
+                direction,
+            })
+        })
+        .trans_builder(is_running, |_: &Idling, direction| {
+            Some(Running {
+                speed: 2.0,
+                direction,
+            })
+        })
+        .trans_builder(is_jumping, |_: &Idling, _jumping| {
+            Some(Jumping { impulse: 10. })
+        })
+        .trans::<Jumping, _>(done(Some(Done::Success)), Falling)
+
+        
+        ;
+
     commands.spawn((
         Name::new(key.to_string().to_string()),
         Player {},
         PlayerAnimation::running(),
+        Idling,
+        player_state,
         SpriteBundle {
             texture: image_handles[&TextureKey::Entities].clone_weak(),
             transform: Transform {
@@ -225,3 +295,17 @@ pub fn spawn_player(
         StateScoped(Screen::Playing),
     ));
 }
+
+
+pub fn jump(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Transform, &Jumping), Added<Jumping> >,
+) {
+    for (entity, mut transform, jumping) in &mut query {
+        let impulse = jumping.impulse;
+        // todo: todo change velocity of mario to make it jump
+        dbg!("enter");
+        commands.entity(entity).insert(Done::Success);
+    }
+}
+

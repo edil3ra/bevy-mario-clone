@@ -1,9 +1,9 @@
+pub mod animate;
 pub mod assets;
 pub mod entities;
 pub mod movement;
 pub mod spawn;
 pub mod tiles;
-pub mod animate;
 
 use bevy::prelude::*;
 
