@@ -16,7 +16,7 @@ use crate::{
             HandleMap, LevelAsset, LevelKey, LevelTileAsset, PatternAsset, PatternKey,
             PatternTilesAsset, TextureKey,
         },
-        tiles::OverWorld,
+        tiles::Tile,
         GameState,
     },
 };
@@ -183,8 +183,7 @@ pub fn create_tile(
     map_entity: Entity,
     tile_storage: &mut TileStorage,
 ) {
-    let texture_index =
-        TileTextureIndex(OverWorld::from(tile.style.as_ref().unwrap().as_ref()) as u32);
+    let texture_index = TileTextureIndex(Tile::from(tile.style.as_ref().unwrap().as_ref()) as u32);
     let tile_entity = commands
         .spawn((
             TileBundle {

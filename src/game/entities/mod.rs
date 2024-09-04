@@ -4,14 +4,15 @@ pub mod player;
 use bevy::{prelude::*, utils::hashbrown::HashMap};
 
 use crate::{
-    config::{MAP_HEIGHT, TILE_SIZE},
+    config::{FRAMES_RECT_GOOMBA_BROWN, FRAMES_RECT_PLAYER, MAP_HEIGHT, TILE_SIZE},
     game::assets::{HandleMap, TextureKey},
-    screen::Screen, AppSet,
+    screen::Screen,
+    AppSet,
 };
 
 use self::{
-    goomba::{spawn_goomba, FRAMES_RECT_GOOMBA_BROWN},
-    player::{jump, spawn_player, FRAMES_RECT_PLAYER},
+    goomba::spawn_goomba,
+    player::{jump, spawn_player},
 };
 
 use super::{

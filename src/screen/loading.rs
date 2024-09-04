@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::Screen;
 use crate::{
-    game::assets::{HandleMap, LevelKey, PatternKey, SpriteKey, TextureKey},
+    game::assets::{HandleMap, LevelKey, PatternKey, TextureKey},
     ui::prelude::*,
 };
 

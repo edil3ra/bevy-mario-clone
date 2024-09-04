@@ -1,4 +1,4 @@
-pub enum OverWorld {
+pub enum Tile {
     Ground = 0,
     Sky = 126,
     Chocolate = 3,
@@ -72,7 +72,7 @@ pub enum OverWorld {
     BridgeRailWhite = 174,
     Waves = 112,
 }
-impl From<&str> for OverWorld {
+impl From<&str> for Tile {
     fn from(value: &str) -> Self {
         match value {
             "ground" => Self::Ground,

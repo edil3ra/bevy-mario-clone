@@ -1,15 +1,24 @@
+pub mod goomba_animation;
+pub mod player_animation;
+
 use std::time::Duration;
 
-use crate::game::entities::player::PlayerAnimation;
 use crate::AppSet;
 use bevy::prelude::*;
+
+use self::goomba_animation::GoombaAnimation;
+use self::player_animation::PlayerAnimation;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
             update_animation_timer::<PlayerAnimation>.in_set(AppSet::TickTimers),
+            update_animation_timer::<GoombaAnimation>.in_set(AppSet::TickTimers),
             (update_animation_atlas::<PlayerAnimation>,)
+                .chain()
+                .in_set(AppSet::Update),
+            (update_animation_atlas::<GoombaAnimation>,)
                 .chain()
                 .in_set(AppSet::Update),
         ),

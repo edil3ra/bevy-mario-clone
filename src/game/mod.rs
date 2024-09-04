@@ -1,4 +1,4 @@
-pub mod animate;
+pub mod animations;
 pub mod assets;
 pub mod entities;
 pub mod movement;
@@ -32,6 +32,6 @@ pub(super) fn plugin(app: &mut App) {
         movement::plugin,
         spawn::plugin,
         entities::plugin,
-        animate::plugin,
+        animations::plugin,
     ));
 }
