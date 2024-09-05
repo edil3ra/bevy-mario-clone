@@ -33,5 +33,6 @@ pub(super) fn plugin(app: &mut App) {
         spawn::plugin,
         entities::plugin,
         animations::plugin,
+        tiles::plugin,
     ));
 }

@@ -3,10 +3,11 @@ use seldom_state::prelude::*;
 
 use crate::{
     game::{
-        animations::player_animation::PlayerAnimation, assets::{HandleMap, TextureKey}, movement::{ControllerDirection, MovementController, Physics}
+        animations::player_animation::PlayerAnimation,
+        assets::{HandleMap, TextureKey},
+        movement::{ControllerDirection, MovementController, Physics},
     },
     screen::Screen,
-    
 };
 
 use super::{EntityKey, Player, TextureAtlasLayoutEntities};

@@ -1,153 +1,260 @@
-pub enum Tile {
-    Ground = 0,
-    Sky = 126,
-    Chocolate = 3,
-    Bricks = 1,
-    BricksTop = 14,
-    Metal = 2,
-    Chance1 = 4,
-    Chance2 = 5,
-    Chance3 = 6,
-    Coin1 = 15,
-    Coin2 = 31,
-    Coin3 = 47,
-    PipeInsertVertLeft = 80,
-    PipeInsertVertRight = 81,
-    PipeVertLeft = 96,
-    PipeVertRight = 97,
-    PipeChromeInsertVertLeft = 50,
-    PipeChromeInsertVertRight = 51,
-    PipeChromeVertLeft = 66,
-    PipeChromeVertRight = 67,
-    PipeInsertHorTop = 54,
-    PipeInsertHorBottom = 70,
-    PipeHorTop = 55,
-    PipeHorBottom = 71,
-    PipeConnHorTop = 56,
-    PipeConnHorBottom = 72,
-    CloudTile = 142,
-    Cloud11 = 171,
-    Cloud12 = 172,
-    Cloud13 = 173,
-    Cloud21 = 187,
-    Cloud22 = 188,
-    Cloud23 = 189,
-    Cannon1 = 62,
-    Cannon2 = 78,
-    Cannon3 = 94,
-    Bush1 = 203,
-    Bush2 = 204,
-    Bush3 = 205,
-    GrassLeft = 41,
-    Grass = 42,
-    GrassRight = 43,
-    Dirt = 13,
-    TileBlack = 125,
-    TileLightBlue = 122,
-    CastleTopClosed = 8,
-    CastleTopOpen = 9,
-    CastleWindowRight = 10,
-    CastleArch = 11,
-    CastleWindowLeft = 12,
-    PoleGreen = 220,
-    PoleWhite = 219,
-    PoleFinialDarkGrey = 135,
-    PoleFinialGreen = 136,
-    HillLeft = 116,
-    HillRight = 118,
-    HillTop = 119,
-    HillStainsRight = 117,
-    HillStainsLeft = 115,
-    TileGreen = 124,
-    TreeLargeTop = 90,
-    TreeLargeBottom = 106,
-    TreeSmall = 92,
-    TreeWhiteLargeTop = 91,
-    TreeWhiteLargeBottom = 107,
-    TreeWhiteSmall = 93,
-    TreeTrunk = 108,
-    Fence = 110,
-    Bridge = 109,
-    BridgeRailGreen = 190,
-    BridgeRailWhite = 174,
-    Waves = 112,
+use bevy::prelude::*;
+
+use std::time::Duration;
+
+
+pub(super) fn plugin(app: &mut App) {
+    app.register_type::<TileName>();
+    app.register_type::<AnimationTile>();
+    app.register_type::<Behaviour>();
 }
+
+#[derive(Bundle, Default, Clone, Debug)]
+pub struct Tile {
+    pub name: TileName,
+    pub animation: AnimationTile,
+    pub behaviour: Behaviour,
+}
+
+impl Tile {
+    pub fn to_single(name: TileName, frame: u32, behaviour: Behaviour) -> Self {
+        Tile {
+            name,
+            animation: AnimationTile::Single(frame),
+            behaviour,
+        }
+    }
+
+    pub fn to_multiple(
+        name: TileName,
+        frames: Vec<u32>,
+        frame_len: Duration,
+        behaviour: Behaviour,
+    ) -> Self {
+        Tile {
+            name,
+            animation: AnimationTile::Multiple { frames, frame_len },
+            behaviour,
+        }
+    }
+}
+
+#[derive(Component, Reflect, Default, Clone, Copy, Debug)]
+#[reflect(Component)]
+#[derive(strum_macros::Display)]
+pub enum TileName {
+    #[default]
+    Ground,
+    Sky,
+    Chocolate,
+    Bricks,
+    BricksTop,
+    Metal,
+    Chance,
+    Chance1,
+    Chance2,
+    Chance3,
+    Coin,
+    Coin1,
+    Coin2,
+    Coin3,
+    PipeInsertVertLeft,
+    PipeInsertVertRight,
+    PipeVertLeft,
+    PipeVertRight,
+    PipeChromeInsertVertLeft,
+    PipeChromeInsertVertRight,
+    PipeChromeVertLeft,
+    PipeChromeVertRight,
+    PipeInsertHorTop,
+    PipeInsertHorBottom,
+    PipeHorTop,
+    PipeHorBottom,
+    PipeConnHorTop,
+    PipeConnHorBottom,
+    Cloud,
+    Cloud11,
+    Cloud12,
+    Cloud13,
+    Cloud21,
+    Cloud22,
+    Cloud23,
+    Cannon1,
+    Cannon2,
+    Cannon3,
+    Bush1,
+    Bush2,
+    Bush3,
+    GrassLeft,
+    Grass,
+    GrassRight,
+    Dirt,
+    Black,
+    LightBLue,
+    CastleTopClosed,
+    CastleTopOpen,
+    CastleWindowRight,
+    CastleArch,
+    CastleWindowLeft,
+    PoleGreen,
+    PoleWhite,
+    PoleFinialDarkGrey,
+    PoleFinialGreen,
+    HillLeft,
+    HillRight,
+    HillTop,
+    HillStainsRight,
+    HillStainsLeft,
+    Green,
+    TreeLargeTop,
+    TreeLargeBottom,
+    TreeSmall,
+    TreeWhiteLargeTop,
+    TreeWhiteLargeBottom,
+    TreeWhiteSmall,
+    TreeTrunk,
+    Fence,
+    Bridge,
+    BridgeRailGreen,
+    BridgeRailWhite,
+    Waves,
+}
+
+#[derive(Component, Reflect, Clone, Debug)]
+#[reflect(Component)]
+pub enum AnimationTile {
+    Single(u32),
+    Multiple {
+        frames: Vec<u32>,
+        frame_len: Duration,
+    },
+}
+impl Default for AnimationTile {
+    fn default() -> Self {
+        Self::Single(0)
+    }
+}
+
+#[derive(Component, Reflect, Default, Clone, Debug)]
+#[reflect(Component)]
+pub enum Behaviour {
+    #[default]
+    None,
+    Ground,
+    Brick,
+    Coin,
+}
+
 impl From<&str> for Tile {
     fn from(value: &str) -> Self {
         match value {
-            "ground" => Self::Ground,
-            "sky" => Self::Sky,
-            "chocolate" => Self::Chocolate,
-            "bricks" => Self::Bricks,
-            "bricks-top" => Self::BricksTop,
-            "metal" => Self::Metal,
-            "chance-1" => Self::Chance1,
-            "chance-2" => Self::Chance2,
-            "chance-3" => Self::Chance3,
-            "coin-1" => Self::Coin1,
-            "coin-2" => Self::Coin2,
-            "coin-3" => Self::Coin3,
-            "pipe-insert-vert-left" => Self::PipeInsertVertLeft,
-            "pipe-insert-vert-right" => Self::PipeInsertVertRight,
-            "pipe-vert-left" => Self::PipeVertLeft,
-            "pipe-vert-right" => Self::PipeVertRight,
-            "pipe-chrome-insert-vert-left" => Self::PipeChromeInsertVertLeft,
-            "pipe-chrome-insert-vert-right" => Self::PipeChromeInsertVertRight,
-            "pipe-chrome-vert-left" => Self::PipeChromeVertLeft,
-            "pipe-chrome-vert-right" => Self::PipeChromeVertRight,
-            "pipe-insert-hor-top" => Self::PipeInsertHorTop,
-            "pipe-insert-hor-bottom" => Self::PipeInsertHorBottom,
-            "pipe-hor-top" => Self::PipeHorTop,
-            "pipe-hor-bottom" => Self::PipeHorBottom,
-            "pipe-conn-hor-top" => Self::PipeConnHorTop,
-            "pipe-conn-hor-bottom" => Self::PipeConnHorBottom,
-            "cloud-tile" => Self::CloudTile,
-            "cloud-1-1" => Self::Cloud11,
-            "cloud-1-2" => Self::Cloud12,
-            "cloud-1-3" => Self::Cloud13,
-            "cloud-2-1" => Self::Cloud21,
-            "cloud-2-2" => Self::Cloud22,
-            "cloud-2-3" => Self::Cloud23,
-            "cannon-1" => Self::Cannon1,
-            "cannon-2" => Self::Cannon2,
-            "cannon-3" => Self::Cannon3,
-            "bush-1" => Self::Bush1,
-            "bush-2" => Self::Bush2,
-            "bush-3" => Self::Bush3,
-            "grass-left" => Self::GrassLeft,
-            "grass" => Self::Grass,
-            "grass-right" => Self::GrassRight,
-            "dirt" => Self::Dirt,
-            "tile-black" => Self::TileBlack,
-            "tile-light-blue" => Self::TileLightBlue,
-            "castle-top-closed" => Self::CastleTopClosed,
-            "castle-top-open" => Self::CastleTopOpen,
-            "castle-window-right" => Self::CastleWindowRight,
-            "castle-arch" => Self::CastleArch,
-            "castle-window-left" => Self::CastleWindowLeft,
-            "pole-green" => Self::PoleGreen,
-            "pole-white" => Self::PoleWhite,
-            "pole-finial-dark-grey" => Self::PoleFinialDarkGrey,
-            "pole-finial-green" => Self::PoleFinialGreen,
-            "hill-left" => Self::HillLeft,
-            "hill-right" => Self::HillRight,
-            "hill-top" => Self::HillTop,
-            "hill-stains-right" => Self::HillStainsRight,
-            "hill-stains-left" => Self::HillStainsLeft,
-            "tile-green" => Self::TileGreen,
-            "tree-large-top" => Self::TreeLargeTop,
-            "tree-large-bottom" => Self::TreeLargeBottom,
-            "tree-small" => Self::TreeSmall,
-            "tree-white-large-top" => Self::TreeWhiteLargeTop,
-            "tree-white-large-bottom" => Self::TreeWhiteLargeBottom,
-            "tree-white-small" => Self::TreeWhiteSmall,
-            "tree-trunk" => Self::TreeTrunk,
-            "fence" => Self::Fence,
-            "bridge" => Self::Bridge,
-            "bridge-rail-green" => Self::BridgeRailGreen,
-            "bridge-rail-white" => Self::BridgeRailWhite,
-            "waves" => Self::Waves,
-            _ => Self::Waves,
+            "ground" => Tile::to_single(TileName::Ground, 0, Behaviour::None),
+            "sky" => Tile::to_single(TileName::Sky, 126, Behaviour::None),
+            "chocolate" => Tile::to_single(TileName::Chocolate, 3, Behaviour::None),
+            "bricks" => Tile::to_single(TileName::Bricks, 1, Behaviour::Brick),
+            "bricks-top" => Tile::to_single(TileName::BricksTop, 14, Behaviour::Brick),
+            "metal" => Tile::to_single(TileName::Metal, 2, Behaviour::Brick),
+            "chance" => Tile::to_multiple(
+                TileName::Chance,
+                [4, 5, 6].into(),
+                Duration::from_millis(1000),
+                Behaviour::None,
+            ),
+            "coin" => Tile::to_multiple(
+                TileName::Chance,
+                [15, 31, 47].into(),
+                Duration::from_millis(1000),
+                Behaviour::None,
+            ),
+            "pipe-insert-vert-left" => {
+                Tile::to_single(TileName::PipeInsertVertLeft, 80, Behaviour::None)
+            }
+            "pipe-insert-vert-right" => {
+                Tile::to_single(TileName::PipeInsertVertRight, 81, Behaviour::None)
+            }
+            "pipe-vert-left" => Tile::to_single(TileName::PipeVertLeft, 96, Behaviour::None),
+            "pipe-vert-right" => Tile::to_single(TileName::PipeVertRight, 97, Behaviour::None),
+            "pipe-chrome-insert-vert-left" => {
+                Tile::to_single(TileName::PipeChromeInsertVertLeft, 50, Behaviour::None)
+            }
+            "pipe-chrome-insert-vert-right" => {
+                Tile::to_single(TileName::PipeChromeInsertVertRight, 51, Behaviour::None)
+            }
+            "pipe-chrome-vert-left" => {
+                Tile::to_single(TileName::PipeChromeVertLeft, 66, Behaviour::None)
+            }
+            "pipe-chrome-vert-right" => {
+                Tile::to_single(TileName::PipeChromeVertRight, 67, Behaviour::None)
+            }
+            "pipe-insert-hor-top" => {
+                Tile::to_single(TileName::PipeInsertHorTop, 54, Behaviour::None)
+            }
+            "pipe-insert-hor-bottom" => {
+                Tile::to_single(TileName::PipeInsertHorBottom, 70, Behaviour::None)
+            }
+            "pipe-hor-top" => Tile::to_single(TileName::PipeHorTop, 54, Behaviour::None),
+            "pipe-hor-bottom" => Tile::to_single(TileName::PipeHorBottom, 70, Behaviour::None),
+            "pipe-conn-hor-top" => Tile::to_single(TileName::PipeConnHorTop, 56, Behaviour::None),
+            "pipe-conn-hor-bottom" => {
+                Tile::to_single(TileName::PipeConnHorBottom, 71, Behaviour::None)
+            }
+            "cloud-tile" => Tile::to_single(TileName::Cloud, 142, Behaviour::None),
+            "cloud-1-1" => Tile::to_single(TileName::Cloud11, 171, Behaviour::None),
+            "cloud-1-2" => Tile::to_single(TileName::Cloud12, 172, Behaviour::None),
+            "cloud-1-3" => Tile::to_single(TileName::Cloud13, 173, Behaviour::None),
+            "cloud-2-1" => Tile::to_single(TileName::Cloud21, 187, Behaviour::None),
+            "cloud-2-2" => Tile::to_single(TileName::Cloud22, 188, Behaviour::None),
+            "cloud-2-3" => Tile::to_single(TileName::Cloud23, 189, Behaviour::None),
+            "cannon-1" => Tile::to_single(TileName::Cannon1, 62, Behaviour::None),
+            "cannon-2" => Tile::to_single(TileName::Cannon2, 78, Behaviour::None),
+            "cannon-3" => Tile::to_single(TileName::Cannon3, 94, Behaviour::None),
+            "bush-1" => Tile::to_single(TileName::Bush1, 203, Behaviour::None),
+            "bush-2" => Tile::to_single(TileName::Bush2, 204, Behaviour::None),
+            "bush-3" => Tile::to_single(TileName::Bush3, 205, Behaviour::None),
+            "grass-left" => Tile::to_single(TileName::GrassLeft, 41, Behaviour::None),
+            "grass" => Tile::to_single(TileName::Grass, 42, Behaviour::None),
+            "grass-right" => Tile::to_single(TileName::GrassRight, 43, Behaviour::None),
+            "dirt" => Tile::to_single(TileName::Dirt, 13, Behaviour::None),
+            "tile-black" => Tile::to_single(TileName::Black, 125, Behaviour::None),
+            "tile-light-blue" => Tile::to_single(TileName::LightBLue, 122, Behaviour::None),
+            "castle-top-closed" => Tile::to_single(TileName::CastleTopClosed, 8, Behaviour::None),
+            "castle-top-open" => Tile::to_single(TileName::CastleTopOpen, 9, Behaviour::None),
+            "castle-window-right" => {
+                Tile::to_single(TileName::CastleWindowRight, 10, Behaviour::None)
+            }
+            "castle-arch" => Tile::to_single(TileName::CastleArch, 11, Behaviour::None),
+            "castle-window-left" => {
+                Tile::to_single(TileName::CastleWindowLeft, 12, Behaviour::None)
+            }
+            "pole-green" => Tile::to_single(TileName::PoleGreen, 220, Behaviour::None),
+            "pole-white" => Tile::to_single(TileName::PoleWhite, 219, Behaviour::None),
+            "pole-finial-dark-grey" => {
+                Tile::to_single(TileName::PoleFinialDarkGrey, 135, Behaviour::None)
+            }
+            "pole-finial-green" => Tile::to_single(TileName::PoleFinialGreen, 136, Behaviour::None),
+            "hill-left" => Tile::to_single(TileName::HillLeft, 116, Behaviour::None),
+            "hill-right" => Tile::to_single(TileName::HillRight, 118, Behaviour::None),
+            "hill-top" => Tile::to_single(TileName::HillTop, 119, Behaviour::None),
+            "hill-stains-right" => Tile::to_single(TileName::HillStainsRight, 117, Behaviour::None),
+            "hill-stains-left" => Tile::to_single(TileName::HillStainsLeft, 115, Behaviour::None),
+            "tile-green" => Tile::to_single(TileName::Green, 124, Behaviour::None),
+            "tree-large-top" => Tile::to_single(TileName::TreeLargeTop, 90, Behaviour::None),
+            "tree-large-bottom" => Tile::to_single(TileName::TreeLargeBottom, 106, Behaviour::None),
+            "tree-small" => Tile::to_single(TileName::TreeSmall, 92, Behaviour::None),
+            "tree-white-large-top" => {
+                Tile::to_single(TileName::TreeWhiteLargeTop, 91, Behaviour::None)
+            }
+            "tree-white-large-bottom" => {
+                Tile::to_single(TileName::TreeWhiteLargeBottom, 107, Behaviour::None)
+            }
+            "tree-white-small" => Tile::to_single(TileName::TreeWhiteSmall, 93, Behaviour::None),
+            "tree-trunk" => Tile::to_single(TileName::TreeTrunk, 108, Behaviour::None),
+            "fence" => Tile::to_single(TileName::Fence, 110, Behaviour::None),
+            "bridge" => Tile::to_single(TileName::Bridge, 109, Behaviour::None),
+            "bridge-rail-green" => Tile::to_single(TileName::BridgeRailGreen, 190, Behaviour::None),
+            "bridge-rail-white" => Tile::to_single(TileName::BridgeRailWhite, 174, Behaviour::None),
+            "waves" => Tile::to_single(TileName::Waves, 112, Behaviour::None),
+            _ => Tile::to_single(TileName::Waves, 112, Behaviour::None),
         }
     }
 }

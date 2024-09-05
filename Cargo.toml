@@ -13,12 +13,13 @@ log = { version = "0.4", features = [
 bevy_ecs_tilemap = "0.14"
 bevy-inspector-egui = "0.25.0"
 bevy_common_assets = {version = "0.11.0", features = ["json"]}
-serde = "1.0"
-serde_json = "1.0"
-lazy_static = "1.5"
 egui_dock = "0.13"
 transform-gizmo-egui = "0.1"
 seldom_state = "0.11.0"
+serde = "1.0"
+serde_json = "1.0"
+strum = "0.26"
+strum_macros = "0.26"
 
 
 [features]

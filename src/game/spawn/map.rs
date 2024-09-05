@@ -16,7 +16,7 @@ use crate::{
             HandleMap, LevelAsset, LevelKey, LevelTileAsset, PatternAsset, PatternKey,
             PatternTilesAsset, TextureKey,
         },
-        tiles::Tile,
+        tiles::{AnimationTile, Tile},
         GameState,
     },
 };
@@ -183,23 +183,36 @@ pub fn create_tile(
     map_entity: Entity,
     tile_storage: &mut TileStorage,
 ) {
-    let texture_index = TileTextureIndex(Tile::from(tile.style.as_ref().unwrap().as_ref()) as u32);
+    let tile = Tile::from(tile.style.as_ref().unwrap().as_ref());
+    let texture_index = match &tile.animation {
+        AnimationTile::Single(index) => index,
+        AnimationTile::Multiple {
+            frames,
+            frame_len: _,
+        } => frames.first().unwrap(),
+    };
+
     let tile_entity = commands
         .spawn((
             TileBundle {
                 position: tile_pos,
                 tilemap_id: TilemapId(tilemap_entity),
-                texture_index,
+                texture_index: TileTextureIndex(*texture_index),
                 ..Default::default()
             },
+            tile.name,
+            tile.animation,
+            tile.behaviour,
             Name::new(format!(
                 "(name: {}, x: {}, y: {})",
-                tile.style.as_ref().unwrap(),
+                tile.name,
                 tile_pos.x,
                 tile_pos.y
             )),
+            
         ))
         .id();
+
     commands.entity(map_entity).add_child(tile_entity);
     tile_storage.set(&tile_pos, tile_entity);
 }

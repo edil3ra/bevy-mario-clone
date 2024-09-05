@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
 use crate::{
-    game::{animations::goomba_animation::GoombaAnimation, assets::{HandleMap, TextureKey}},
+    game::{
+        animations::goomba_animation::GoombaAnimation,
+        assets::{HandleMap, TextureKey},
+    },
     screen::Screen,
 };
 
