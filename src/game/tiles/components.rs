@@ -2,17 +2,10 @@ use bevy::prelude::*;
 
 use std::time::Duration;
 
-
-pub(super) fn plugin(app: &mut App) {
-    app.register_type::<TileName>();
-    app.register_type::<AnimationTile>();
-    app.register_type::<Behaviour>();
-}
-
-#[derive(Bundle, Default, Clone, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct Tile {
     pub name: TileName,
-    pub animation: AnimationTile,
+    pub animation: AnimationTileBuilder,
     pub behaviour: Behaviour,
 }
 
@@ -20,7 +13,7 @@ impl Tile {
     pub fn to_single(name: TileName, frame: u32, behaviour: Behaviour) -> Self {
         Tile {
             name,
-            animation: AnimationTile::Single(frame),
+            animation: AnimationTileBuilder::Single(frame),
             behaviour,
         }
     }
@@ -33,7 +26,7 @@ impl Tile {
     ) -> Self {
         Tile {
             name,
-            animation: AnimationTile::Multiple { frames, frame_len },
+            animation: AnimationTileBuilder::Multiple(AnimationTile { frames, frame_len }),
             behaviour,
         }
     }
@@ -120,19 +113,22 @@ pub enum TileName {
     Waves,
 }
 
-#[derive(Component, Reflect, Clone, Debug)]
-#[reflect(Component)]
-pub enum AnimationTile {
+#[derive(Clone, Debug)]
+pub enum AnimationTileBuilder {
     Single(u32),
-    Multiple {
-        frames: Vec<u32>,
-        frame_len: Duration,
-    },
+    Multiple(AnimationTile),
 }
-impl Default for AnimationTile {
+impl Default for AnimationTileBuilder {
     fn default() -> Self {
         Self::Single(0)
     }
+}
+
+#[derive(Component, Reflect, Clone, Debug)]
+#[reflect(Component)]
+pub struct AnimationTile {
+    pub frames: Vec<u32>,
+    pub frame_len: Duration,
 }
 
 #[derive(Component, Reflect, Default, Clone, Debug)]
