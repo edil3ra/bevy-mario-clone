@@ -21,12 +21,12 @@ impl Tile {
     pub fn to_multiple(
         name: TileName,
         frames: Vec<u32>,
-        frame_len: Duration,
+        frame_duration: Duration,
         behaviour: Behaviour,
     ) -> Self {
         Tile {
             name,
-            animation: AnimationTileBuilder::Multiple(AnimationTile { frames, frame_len }),
+            animation: AnimationTileBuilder::Multiple{ frames, frame_duration },
             behaviour,
         }
     }
@@ -116,7 +116,10 @@ pub enum TileName {
 #[derive(Clone, Debug)]
 pub enum AnimationTileBuilder {
     Single(u32),
-    Multiple(AnimationTile),
+    Multiple {
+        frames: Vec<u32>,
+        frame_duration: Duration,
+    },
 }
 impl Default for AnimationTileBuilder {
     fn default() -> Self {
@@ -128,7 +131,8 @@ impl Default for AnimationTileBuilder {
 #[reflect(Component)]
 pub struct AnimationTile {
     pub frames: Vec<u32>,
-    pub frame_len: Duration,
+    pub frame: usize,
+    pub timer: Timer,
 }
 
 #[derive(Component, Reflect, Default, Clone, Debug)]
@@ -153,13 +157,13 @@ impl From<&str> for Tile {
             "chance" => Tile::to_multiple(
                 TileName::Chance,
                 [4, 5, 6].into(),
-                Duration::from_millis(1000),
+                Duration::from_millis(200),
                 Behaviour::None,
             ),
             "coin" => Tile::to_multiple(
                 TileName::Chance,
                 [15, 31, 47].into(),
-                Duration::from_millis(1000),
+                Duration::from_millis(200),
                 Behaviour::None,
             ),
             "pipe-insert-vert-left" => {
