@@ -6,7 +6,7 @@ use seldom_state::prelude::*;
 use crate::{
     game::{
         assets::{HandleMap, TextureKey},
-        movement::{ControllerDirection, MovementController, Physics},
+        movement::{ControllerDirection, MovementController},
     },
     screen::Screen,
 };

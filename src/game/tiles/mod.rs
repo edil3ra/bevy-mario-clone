@@ -32,7 +32,7 @@ fn update_animation_tile_timer(time: Res<Time>, mut query: Query<&mut AnimationT
     }
 }
 
-fn update_animation_time_atlas(mut query: Query<(&AnimationTile, &mut TileTextureIndex)> ) {
+fn update_animation_time_atlas(mut query: Query<(&AnimationTile, &mut TileTextureIndex)>) {
     for (animation, mut texture_index) in &mut query {
         if animation.timer.finished() {
             texture_index.0 = animation.frames[animation.frame];

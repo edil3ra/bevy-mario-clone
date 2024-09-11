@@ -2,6 +2,7 @@ pub mod animations;
 pub mod assets;
 pub mod entities;
 pub mod movement;
+pub mod physics;
 pub mod spawn;
 pub mod tiles;
 
@@ -28,11 +29,12 @@ pub(super) fn plugin(app: &mut App) {
     });
 
     app.add_plugins((
-        assets::plugin,
-        movement::plugin,
-        spawn::plugin,
-        entities::plugin,
         animations::plugin,
+        assets::plugin,
+        entities::plugin,
+        movement::plugin,
+        physics::plugin,
+        spawn::plugin,
         tiles::plugin,
     ));
 }

@@ -26,7 +26,10 @@ impl Tile {
     ) -> Self {
         Tile {
             name,
-            animation: AnimationTileBuilder::Multiple{ frames, frame_duration },
+            animation: AnimationTileBuilder::Multiple {
+                frames,
+                frame_duration,
+            },
             behaviour,
         }
     }

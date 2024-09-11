@@ -1,14 +1,14 @@
-use bevy::prelude::*;
-use seldom_state::prelude::*;
-
 use crate::{
     game::{
         animations::player_animation::PlayerAnimation,
         assets::{HandleMap, TextureKey},
-        movement::{ControllerDirection, MovementController, Physics},
+        movement::{ControllerDirection, MovementController},
+        physics::DynamicBoxBundle,
     },
     screen::Screen,
 };
+use bevy::prelude::*;
+use seldom_state::prelude::*;
 
 use super::{EntityKey, Player, TextureAtlasLayoutEntities};
 
@@ -108,7 +108,7 @@ pub fn spawn_player(
     commands.spawn((
         Name::new(key.to_string().to_string()),
         Player {},
-        PlayerAnimation::running(),
+        PlayerAnimation::idling(),
         Idling,
         player_state,
         SpriteBundle {
@@ -124,9 +124,7 @@ pub fn spawn_player(
             index: 0,
         },
         MovementController::default(),
-        Physics {
-            ..Default::default()
-        },
+        DynamicBoxBundle::new_with_pos_and_vel(Vec2::new(100., 100.), Vec2::new(0., 0.)),
         StateScoped(Screen::Playing),
     ));
 }
