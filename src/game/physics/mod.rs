@@ -1,10 +1,11 @@
 mod components;
 mod resources;
 mod systems;
+mod utils;
 
 use std::time::Duration;
 
-pub use crate::game::physics::{components::*, resources::*, systems::*};
+pub use crate::game::physics::{components::*, resources::*, systems::*, utils::*};
 use bevy::prelude::*;
 
 pub const DELTA_TIME: f32 = 1. / 60.;

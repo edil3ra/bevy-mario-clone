@@ -151,7 +151,7 @@ pub enum Behaviour {
 impl From<&str> for Tile {
     fn from(value: &str) -> Self {
         match value {
-            "ground" => Tile::to_single(TileName::Ground, 0, Behaviour::None),
+            "ground" => Tile::to_single(TileName::Ground, 0, Behaviour::Ground),
             "sky" => Tile::to_single(TileName::Sky, 126, Behaviour::None),
             "chocolate" => Tile::to_single(TileName::Chocolate, 3, Behaviour::None),
             "bricks" => Tile::to_single(TileName::Bricks, 1, Behaviour::Brick),
