@@ -10,7 +10,7 @@ use bevy_ecs_tilemap::{
 };
 
 use crate::{
-    config::MAP_HEIGHT,
+    config::{MAP_HEIGHT, TILE_SIZE},
     game::{
         assets::{
             HandleMap, LevelAsset, LevelKey, LevelTileAsset, PatternAsset, PatternKey,
@@ -77,7 +77,10 @@ fn spawn_map(
         );
     }
 
-    let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
+    let tile_size = TilemapTileSize {
+        x: TILE_SIZE as f32,
+        y: TILE_SIZE as f32,
+    };
     let grid_size = tile_size.into();
     let map_type = TilemapType::default();
 

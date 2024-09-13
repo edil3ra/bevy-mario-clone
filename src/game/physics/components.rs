@@ -1,4 +1,7 @@
 use bevy::prelude::*;
+use bevy_ecs_tilemap::tiles::TilePos;
+
+use crate::config::TILE_SIZE;
 
 #[derive(Component, Debug, Default)]
 pub struct Pos(pub Vec2);
@@ -36,11 +39,39 @@ pub struct Aabb {
 }
 
 impl Aabb {
+    pub fn new(min: Vec2, max: Vec2) -> Self {
+        Self { min, max }
+    }
+
     pub fn intersects(&self, other: &Self) -> bool {
         self.max.x >= other.min.x
             && self.max.y >= other.min.y
             && self.min.x <= other.max.x
             && self.min.y <= other.max.y
+    }
+
+    pub fn right(&self) -> f32 {
+        self.max.x
+    }
+    pub fn top(&self) -> f32 {
+        self.max.y
+    }
+    pub fn left(&self) -> f32 {
+        self.min.x
+    }
+    pub fn bottom(&self) -> f32 {
+        self.min.y
+    }
+}
+
+impl From<TilePos> for Aabb {
+    fn from(tile_pos: TilePos) -> Self {
+        let x = (tile_pos.x * TILE_SIZE) as f32;
+        let y = (tile_pos.y * TILE_SIZE) as f32;
+        Self::new(
+            Vec2::new(x, y),
+            Vec2::new(x + TILE_SIZE as f32, y + TILE_SIZE as f32),
+        )
     }
 }
 

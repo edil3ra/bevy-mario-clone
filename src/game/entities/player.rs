@@ -3,7 +3,7 @@ use crate::{
         animations::player_animation::PlayerAnimation,
         assets::{HandleMap, TextureKey},
         movement::{ControllerDirection, MovementController},
-        physics::DynamicBoxBundle,
+        physics::{BoxCollider, DynamicBoxBundle, Pos},
     },
     screen::Screen,
 };
@@ -124,7 +124,12 @@ pub fn spawn_player(
             index: 0,
         },
         MovementController::default(),
-        DynamicBoxBundle::new_with_pos_and_vel(Vec2::new(100., 100.), Vec2::new(0., 0.)),
+        // DynamicBoxBundle::new_with_pos_and_vel(Vec2::new(100., 100.), Vec2::new(0., 0.)),
+        DynamicBoxBundle {
+            pos: Pos(Vec2::new(100., 100.)),
+            collider: BoxCollider { size: Vec2::new(16., 16.) },
+            ..Default::default()
+        },
         StateScoped(Screen::Playing),
     ));
 }
