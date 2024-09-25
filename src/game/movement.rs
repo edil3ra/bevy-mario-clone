@@ -2,15 +2,19 @@ use bevy::prelude::*;
 
 use crate::AppSet;
 
+use super::physics::{Forces, PhysicsStep, Vel};
+
 pub(super) fn plugin(app: &mut App) {
-    // Record directional input as movement controls.
     app.register_type::<MovementController>();
     app.add_systems(
         Update,
         record_movement_controller.in_set(AppSet::RecordInput),
     );
 
-    app.add_systems(Update, (apply_movement).chain().in_set(AppSet::Update));
+    app.add_systems(
+        FixedUpdate,
+        apply_movement.in_set(PhysicsStep::PreIntegrate),
+    );
 }
 
 #[derive(Reflect, Debug)]
@@ -54,12 +58,12 @@ fn record_movement_controller(
 ) {
     for mut controller in &mut controller_query {
         controller.reset();
-        if input.pressed(KeyCode::ArrowLeft) && input.pressed(KeyCode::ArrowRight) {
-            controller.moving = ControllerDirection::Idle;
-        } else if input.pressed(KeyCode::ArrowLeft) {
+        if input.pressed(KeyCode::ArrowLeft) {
             controller.moving = ControllerDirection::Left;
         } else if input.pressed(KeyCode::ArrowRight) {
             controller.moving = ControllerDirection::Right;
+        } else {
+            controller.moving = ControllerDirection::Idle;
         }
         if input.pressed(KeyCode::Space) {
             controller.jumping = true
@@ -70,33 +74,37 @@ fn record_movement_controller(
     }
 }
 
-fn apply_movement(time: Res<Time>, mut query: Query<(&MovementController)>) {
-    // let dt = time.delta().as_secs_f32();
-    // for (mut physics, intention) in &mut query {
-    //     let abs_x = physics.velocity.x.abs();
-    //     let mut distance = 0.0; // will be used later
-    //     let direction = match intention.moving {
-    //         ControllerDirection::Idle => 0,
-    //         ControllerDirection::Left => -1,
-    //         ControllerDirection::Right => 1,
-    //     };
+fn apply_movement(time: Res<Time>, mut query: Query<(&MovementController, &Vel, &mut Forces)>) {
+    let dt = time.delta().as_secs_f32();
+    for (controller, vel, mut forces) in &mut query {
+        let mut new_vel_x = 0.;
+        let abs_x = vel.0.x.abs();
+        let mut distance = 0.0;
+        let direction = match controller.moving {
+            ControllerDirection::Idle => 0,
+            ControllerDirection::Left => -1,
+            ControllerDirection::Right => 1,
+        };
 
-    //     if direction == 0 {
-    //         if physics.velocity.x != 0.0 {
-    //             let decel = abs_x.min(300.0 * dt);
-    //             if physics.velocity.x > 0.0 {
-    //                 physics.velocity.x -= decel;
-    //             } else {
-    //                 physics.velocity.x += decel;
-    //             }
-    //         } else {
-    //             distance = 0.0;
-    //         }
-    //     } else {
-    //         physics.velocity.x += 400.0 * direction as f32 * dt;
-    //     }
-    //     let drag = 1.0 / 5000.0 * physics.velocity.x * abs_x;
-    //     physics.velocity.x -= drag;
-    //     distance = abs_x * dt;
-    // }
+        if direction == 0 {
+            if vel.0.x != 0.0 {
+                let decel = abs_x.min(300.0);
+                if vel.0.x > 0.0 {
+                    new_vel_x = -decel;
+                } else {
+                    new_vel_x = decel;
+                }
+            } else {
+                distance = 0.0;
+            }
+        } else {
+            new_vel_x += 400.0 * direction as f32;
+        }
+        let updated_vel_x = vel.0.x + (new_vel_x * dt);
+        let drag = ((1.0 / 5000.0 / dt) * updated_vel_x * updated_vel_x.abs());
+
+        forces.0.push(Vec2::new(new_vel_x, 0.));
+        forces.0.push(Vec2::new(-drag, 0.));
+        distance = abs_x * dt;
+    }
 }

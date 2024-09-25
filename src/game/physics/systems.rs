@@ -1,7 +1,7 @@
 use super::components::*;
 use super::resources::*;
 use super::COLLISION_PAIR_VEL_MARGIN_FACTOR;
-use super::DELTA_TIME;
+use super::DT;
 use bevy::prelude::*;
 
 pub fn update_aabb_box(mut query: Query<(&mut Aabb, &Pos, &Vel, &BoxCollider)>) {
@@ -54,16 +54,27 @@ pub fn box_box(pos_a: Vec2, size_a: Vec2, pos_b: Vec2, size_b: Vec2) -> Option<C
 }
 
 pub fn integrate(
-    mut query: Query<(&mut Pos, &mut PrevPos, &mut Vel, &mut PreSolveVel, &Mass)>,
+    mut query: Query<(
+        &mut Pos,
+        &mut PrevPos,
+        &mut Vel,
+        &mut PreSolveVel,
+        &Mass,
+        &mut Forces,
+    )>,
     gravity: Res<Gravity>,
 ) {
-    for (mut pos, mut prev_pos, mut vel, mut pre_solve_vel, mass) in query.iter_mut() {
+    for (mut pos, mut prev_pos, mut vel, mut pre_solve_vel, mass, mut forces) in query.iter_mut() {
         prev_pos.0 = pos.0;
 
         let gravitation_force = mass.0 * gravity.0;
         let external_forces = gravitation_force;
-        vel.0 += DELTA_TIME * external_forces / mass.0;
-        pos.0 += DELTA_TIME * vel.0;
+
+        let forces_sum: Vec2 = forces.0.iter().chain(&[external_forces]).sum();
+        forces.0.clear();
+
+        vel.0 += DT * forces_sum / mass.0;
+        pos.0 += DT * vel.0;
         pre_solve_vel.0 = vel.0;
     }
 }
@@ -111,7 +122,13 @@ pub fn solve_pos(
 
 pub fn update_vel(mut query: Query<(&Pos, &PrevPos, &mut Vel)>) {
     for (pos, prev_pos, mut vel) in query.iter_mut() {
-        vel.0 = (pos.0 - prev_pos.0) / DELTA_TIME;
+        vel.0 = (pos.0 - prev_pos.0) / DT;
+        if vel.0.x.abs() <= 0.05 {
+            vel.0.x = 0.0;
+        }
+        if vel.0.y.abs() <= 0.05 {
+            vel.0.y = 0.0;
+        }
     }
 }
 

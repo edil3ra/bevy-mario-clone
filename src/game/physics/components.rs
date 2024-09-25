@@ -3,13 +3,16 @@ use bevy_ecs_tilemap::tiles::TilePos;
 
 use crate::config::TILE_SIZE;
 
-#[derive(Component, Debug, Default)]
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
 pub struct Pos(pub Vec2);
 
-#[derive(Component, Debug, Default)]
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
 pub struct PrevPos(pub Vec2);
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
+#[reflect(Component)]
 pub struct Mass(pub f32);
 impl Default for Mass {
     fn default() -> Self {
@@ -17,13 +20,16 @@ impl Default for Mass {
     }
 }
 
-#[derive(Component, Debug, Default)]
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
 pub struct PreSolveVel(pub Vec2);
 
-#[derive(Component, Debug, Default)]
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
 pub struct Vel(pub Vec2);
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
+#[reflect(Component)]
 pub struct Restitution(pub f32);
 
 impl Default for Restitution {
@@ -32,7 +38,12 @@ impl Default for Restitution {
     }
 }
 
-#[derive(Component, Debug, Default)]
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
+pub struct Forces(pub Vec<Vec2>);
+
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
 pub struct Aabb {
     pub min: Vec2,
     pub max: Vec2,
@@ -80,7 +91,8 @@ pub struct Contact {
     pub normal: Vec2,
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
+#[reflect(Component)]
 pub struct BoxCollider {
     pub size: Vec2,
 }
@@ -101,6 +113,7 @@ pub struct DynamicBoxBundle {
     pub pre_solve_vel: PreSolveVel,
     pub restitution: Restitution,
     pub aabb: Aabb,
+    pub forces: Forces,
 }
 
 impl DynamicBoxBundle {
