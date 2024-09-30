@@ -1,13 +1,12 @@
 mod components;
 mod resources;
 mod systems;
-mod utils;
 
+use bevy::prelude::*;
 use std::time::Duration;
 
 use crate::config::GRAVITY;
-pub use crate::game::physics::{components::*, resources::*, systems::*, utils::*};
-use bevy::prelude::*;
+pub use crate::game::physics::{components::*, resources::*, systems::*};
 
 pub const DT: f32 = 1. / 60.;
 const COLLISION_PAIR_VEL_MARGIN_FACTOR: f32 = 2. * DT;
@@ -65,7 +64,10 @@ pub(super) fn plugin(app: &mut App) {
         (collect_collision_pairs).in_set(PhysicsStep::CollectCollisionPairs),
     );
     app.add_systems(FixedUpdate, (integrate).in_set(PhysicsStep::Integrate));
-    app.add_systems(FixedUpdate, (solve_pos).in_set(PhysicsStep::SolvePositions));
+    app.add_systems(
+        FixedUpdate,
+        (solve_pos, draw_box_collider).in_set(PhysicsStep::SolvePositions),
+    );
     app.add_systems(
         FixedUpdate,
         (update_vel).in_set(PhysicsStep::UpdateVelocities),

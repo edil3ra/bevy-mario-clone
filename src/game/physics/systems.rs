@@ -170,3 +170,9 @@ pub fn sync_transforms(mut query: Query<(&mut bevy::transform::components::Trans
         transform.translation = pos.0.extend(1.);
     }
 }
+
+pub fn draw_box_collider(mut gizmos: Gizmos, query: Query<(&Pos, &BoxCollider)>) {
+    for (pos, box_collider) in query.iter() {
+        gizmos.rect_2d(pos.0, Rot2::IDENTITY, box_collider.size, Color::WHITE);
+    }
+}

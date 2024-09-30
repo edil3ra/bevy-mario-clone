@@ -148,6 +148,17 @@ pub enum Behaviour {
     Coin,
 }
 
+impl Behaviour {
+    pub fn has_collide(&self) -> bool {
+        match self {
+            Behaviour::None => false,
+            Behaviour::Ground => true,
+            Behaviour::Brick => true,
+            Behaviour::Coin => false,
+        }
+    }
+}
+
 impl From<&str> for Tile {
     fn from(value: &str) -> Self {
         match value {
@@ -170,36 +181,36 @@ impl From<&str> for Tile {
                 Behaviour::None,
             ),
             "pipe-insert-vert-left" => {
-                Tile::to_single(TileName::PipeInsertVertLeft, 80, Behaviour::None)
+                Tile::to_single(TileName::PipeInsertVertLeft, 80, Behaviour::Ground)
             }
             "pipe-insert-vert-right" => {
-                Tile::to_single(TileName::PipeInsertVertRight, 81, Behaviour::None)
+                Tile::to_single(TileName::PipeInsertVertRight, 81, Behaviour::Ground)
             }
-            "pipe-vert-left" => Tile::to_single(TileName::PipeVertLeft, 96, Behaviour::None),
-            "pipe-vert-right" => Tile::to_single(TileName::PipeVertRight, 97, Behaviour::None),
+            "pipe-vert-left" => Tile::to_single(TileName::PipeVertLeft, 96, Behaviour::Ground),
+            "pipe-vert-right" => Tile::to_single(TileName::PipeVertRight, 97, Behaviour::Ground),
             "pipe-chrome-insert-vert-left" => {
-                Tile::to_single(TileName::PipeChromeInsertVertLeft, 50, Behaviour::None)
+                Tile::to_single(TileName::PipeChromeInsertVertLeft, 50, Behaviour::Ground)
             }
             "pipe-chrome-insert-vert-right" => {
-                Tile::to_single(TileName::PipeChromeInsertVertRight, 51, Behaviour::None)
+                Tile::to_single(TileName::PipeChromeInsertVertRight, 51, Behaviour::Ground)
             }
             "pipe-chrome-vert-left" => {
-                Tile::to_single(TileName::PipeChromeVertLeft, 66, Behaviour::None)
+                Tile::to_single(TileName::PipeChromeVertLeft, 66, Behaviour::Ground)
             }
             "pipe-chrome-vert-right" => {
-                Tile::to_single(TileName::PipeChromeVertRight, 67, Behaviour::None)
+                Tile::to_single(TileName::PipeChromeVertRight, 67, Behaviour::Ground)
             }
             "pipe-insert-hor-top" => {
-                Tile::to_single(TileName::PipeInsertHorTop, 54, Behaviour::None)
+                Tile::to_single(TileName::PipeInsertHorTop, 54, Behaviour::Ground)
             }
             "pipe-insert-hor-bottom" => {
-                Tile::to_single(TileName::PipeInsertHorBottom, 70, Behaviour::None)
+                Tile::to_single(TileName::PipeInsertHorBottom, 70, Behaviour::Ground)
             }
-            "pipe-hor-top" => Tile::to_single(TileName::PipeHorTop, 54, Behaviour::None),
-            "pipe-hor-bottom" => Tile::to_single(TileName::PipeHorBottom, 70, Behaviour::None),
-            "pipe-conn-hor-top" => Tile::to_single(TileName::PipeConnHorTop, 56, Behaviour::None),
+            "pipe-hor-top" => Tile::to_single(TileName::PipeHorTop, 54, Behaviour::Ground),
+            "pipe-hor-bottom" => Tile::to_single(TileName::PipeHorBottom, 70, Behaviour::Ground),
+            "pipe-conn-hor-top" => Tile::to_single(TileName::PipeConnHorTop, 56, Behaviour::Ground),
             "pipe-conn-hor-bottom" => {
-                Tile::to_single(TileName::PipeConnHorBottom, 71, Behaviour::None)
+                Tile::to_single(TileName::PipeConnHorBottom, 71, Behaviour::Ground)
             }
             "cloud-tile" => Tile::to_single(TileName::Cloud, 142, Behaviour::None),
             "cloud-1-1" => Tile::to_single(TileName::Cloud11, 171, Behaviour::None),
