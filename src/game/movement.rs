@@ -2,7 +2,10 @@ use bevy::prelude::*;
 
 use crate::AppSet;
 
-use super::physics::{Forces, PhysicsStep, Vel};
+use super::{
+    entities::Player,
+    physics::{Forces, PhysicsStep, Vel},
+};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<MovementController>();
@@ -10,6 +13,8 @@ pub(super) fn plugin(app: &mut App) {
         Update,
         record_movement_controller.in_set(AppSet::RecordInput),
     );
+
+    app.add_systems(Update, camera_follow_player.in_set(AppSet::Update));
 
     app.add_systems(
         FixedUpdate,
@@ -27,6 +32,42 @@ pub enum ControllerDirection {
 impl Default for ControllerDirection {
     fn default() -> Self {
         Self::Idle
+    }
+}
+
+pub enum Direction {
+    Right,
+    TopRight,
+    Top,
+    TopLeft,
+    Left,
+    BottomLeft,
+    Bottom,
+    BottomRight,
+    Neutral,
+}
+
+impl From<Vec2> for Direction {
+    fn from(value: Vec2) -> Self {
+        if value.x > 0. && value.y > 0. {
+            Self::TopRight
+        } else if value.x < 0. && value.y > 0. {
+            Self::TopLeft
+        } else if value.x < 0. && value.y < 0. {
+            Self::BottomLeft
+        } else if value.x > 0. && value.y < 0. {
+            Self::BottomRight
+        } else if value.x > 0. {
+            Self::Right
+        } else if value.x < 0. {
+            Self::Left
+        } else if value.y > 0. {
+            Self::Top
+        } else if value.y < 0. {
+            Self::Bottom
+        } else {
+            Self::Neutral
+        }
     }
 }
 
@@ -74,6 +115,17 @@ fn record_movement_controller(
     }
 }
 
+fn camera_follow_player(
+    mut camera: Query<&mut Transform, With<Camera>>,
+    player: Query<&Transform, (With<Player>, Without<Camera>)>,
+) {
+    for mut transform in &mut camera {
+        for player_transform in &player {
+            transform.translation.x = player_transform.translation.x;
+            transform.translation.y = player_transform.translation.y;
+        }
+    }
+}
 fn apply_movement(time: Res<Time>, mut query: Query<(&MovementController, &Vel, &mut Forces)>) {
     let dt = time.delta().as_secs_f32();
     for (controller, vel, mut forces) in &mut query {
