@@ -3,7 +3,7 @@ use crate::{
         animations::player_animation::PlayerAnimation,
         assets::{HandleMap, TextureKey},
         movement::{ControllerDirection, MovementController},
-        physics::{BoxCollider, DynamicBoxBundle, Pos},
+        physics::{BoxCollider, Drag, DynamicBoxBundle, Pos},
         traits::go::Go,
     },
     screen::Screen,
@@ -123,13 +123,6 @@ pub fn spawn_player(
             index: 0,
         },
         MovementController::default(),
-        DynamicBoxBundle {
-            pos: Pos(Vec2::new(100., 100.)),
-            collider: BoxCollider {
-                size: Vec2::new(16., 16.),
-            },
-            ..Default::default()
-        },
         Idling,
         player_state,
         Go {
@@ -137,8 +130,16 @@ pub fn spawn_player(
             heading: 0,
             acceleration: 400.,
             deceleration: 300.,
-            drag_factor: 1. / 5000.,
+            drag_factor_x: 1. / 5000.,
             distance: 0.,
+        },
+        DynamicBoxBundle {
+            pos: Pos(Vec2::new(100., 100.)),
+            drag: Drag(Vec2::new(1. / 5000., 0.)),
+            collider: BoxCollider {
+                size: Vec2::new(16., 16.),
+            },
+            ..Default::default()
         },
         StateScoped(Screen::Playing),
     ));

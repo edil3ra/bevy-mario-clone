@@ -44,6 +44,10 @@ pub struct Forces(pub Vec<Vec2>);
 
 #[derive(Component, Debug, Default, Reflect)]
 #[reflect(Component)]
+pub struct Drag(pub Vec2);
+
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
 pub struct Aabb {
     pub min: Vec2,
     pub max: Vec2,
@@ -114,15 +118,5 @@ pub struct DynamicBoxBundle {
     pub restitution: Restitution,
     pub aabb: Aabb,
     pub forces: Forces,
-}
-
-impl DynamicBoxBundle {
-    pub fn new_with_pos_and_vel(pos: Vec2, vel: Vec2) -> Self {
-        Self {
-            pos: Pos(pos),
-            prev_pos: PrevPos(pos - vel),
-            vel: Vel(vel),
-            ..Default::default()
-        }
-    }
+    pub drag: Drag,
 }

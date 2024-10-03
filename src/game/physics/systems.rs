@@ -61,10 +61,13 @@ pub fn integrate(
         &mut PreSolveVel,
         &Mass,
         &mut Forces,
+        &Drag,
     )>,
     gravity: Res<Gravity>,
 ) {
-    for (mut pos, mut prev_pos, mut vel, mut pre_solve_vel, mass, mut forces) in query.iter_mut() {
+    for (mut pos, mut prev_pos, mut vel, mut pre_solve_vel, mass, mut forces, drag) in
+        query.iter_mut()
+    {
         prev_pos.0 = pos.0;
 
         let gravitation_force = mass.0 * gravity.0;
@@ -73,8 +76,17 @@ pub fn integrate(
         let forces_sum: Vec2 = forces.0.iter().chain(&[external_forces]).sum();
         forces.0.clear();
 
-        vel.0 += DT * forces_sum / mass.0;
+        // new velocity based on forces
+        let new_velocity = vel.0 += DT * forces_sum / mass.0;
+
+        // add drag factor
+        {
+            let velocity = vel.0;
+            vel.0 -= velocity * velocity.abs() * drag.0;
+        }
+
         pos.0 += DT * vel.0;
+
         pre_solve_vel.0 = vel.0;
     }
 }
