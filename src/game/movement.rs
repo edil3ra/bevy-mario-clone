@@ -2,10 +2,7 @@ use bevy::prelude::*;
 
 use crate::AppSet;
 
-use super::{
-    entities::Player,
-    physics::{Forces, PhysicsStep, Vel},
-};
+use super::entities::Player;
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<MovementController>();
@@ -15,14 +12,9 @@ pub(super) fn plugin(app: &mut App) {
     );
 
     app.add_systems(Update, camera_follow_player.in_set(AppSet::Update));
-
-    app.add_systems(
-        FixedUpdate,
-        apply_movement.in_set(PhysicsStep::PreIntegrate),
-    );
 }
 
-#[derive(Reflect, Debug)]
+#[derive(Reflect, Debug, Clone)]
 pub enum ControllerDirection {
     Idle,
     Left,
@@ -32,6 +24,16 @@ pub enum ControllerDirection {
 impl Default for ControllerDirection {
     fn default() -> Self {
         Self::Idle
+    }
+}
+
+impl From<ControllerDirection> for i32 {
+    fn from(value: ControllerDirection) -> Self {
+        match value {
+            ControllerDirection::Idle => 0,
+            ControllerDirection::Left => -1,
+            ControllerDirection::Right => 1,
+        }
     }
 }
 
@@ -124,39 +126,5 @@ fn camera_follow_player(
             transform.translation.x = player_transform.translation.x;
             transform.translation.y = player_transform.translation.y;
         }
-    }
-}
-fn apply_movement(time: Res<Time>, mut query: Query<(&MovementController, &Vel, &mut Forces)>) {
-    let dt = time.delta().as_secs_f32();
-    for (controller, vel, mut forces) in &mut query {
-        let mut new_vel_x = 0.;
-        let abs_x = vel.0.x.abs();
-        let mut distance = 0.0;
-        let direction = match controller.moving {
-            ControllerDirection::Idle => 0,
-            ControllerDirection::Left => -1,
-            ControllerDirection::Right => 1,
-        };
-
-        if direction == 0 {
-            if vel.0.x != 0.0 {
-                let decel = abs_x.min(300.0);
-                if vel.0.x > 0.0 {
-                    new_vel_x = -decel;
-                } else {
-                    new_vel_x = decel;
-                }
-            } else {
-                distance = 0.0;
-            }
-        } else {
-            new_vel_x += 400.0 * direction as f32;
-        }
-        let updated_vel_x = vel.0.x + (new_vel_x * dt);
-        let drag = ((1.0 / 5000.0 / dt) * updated_vel_x * updated_vel_x.abs());
-
-        forces.0.push(Vec2::new(new_vel_x, 0.));
-        forces.0.push(Vec2::new(-drag, 0.));
-        distance = abs_x * dt;
     }
 }

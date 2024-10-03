@@ -4,6 +4,7 @@ use crate::{
         assets::{HandleMap, TextureKey},
         movement::{ControllerDirection, MovementController},
         physics::{BoxCollider, DynamicBoxBundle, Pos},
+        traits::go::Go,
     },
     screen::Screen,
 };
@@ -109,8 +110,6 @@ pub fn spawn_player(
         Name::new(key.to_string().to_string()),
         Player {},
         PlayerAnimation::idling(),
-        Idling,
-        player_state,
         SpriteBundle {
             texture: image_handles[&TextureKey::Entities].clone_weak(),
             transform: Transform {
@@ -130,6 +129,16 @@ pub fn spawn_player(
                 size: Vec2::new(16., 16.),
             },
             ..Default::default()
+        },
+        Idling,
+        player_state,
+        Go {
+            direction: 0,
+            heading: 0,
+            acceleration: 400.,
+            deceleration: 300.,
+            drag_factor: 1. / 5000.,
+            distance: 0.,
         },
         StateScoped(Screen::Playing),
     ));

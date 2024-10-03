@@ -5,6 +5,7 @@ pub mod movement;
 pub mod physics;
 pub mod spawn;
 pub mod tiles;
+pub mod traits;
 
 use bevy::prelude::*;
 
@@ -36,5 +37,6 @@ pub(super) fn plugin(app: &mut App) {
         physics::plugin,
         spawn::plugin,
         tiles::plugin,
+        traits::plugin,
     ));
 }
