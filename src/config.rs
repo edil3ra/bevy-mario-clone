@@ -8,7 +8,9 @@ pub const TILE_SIZE: u32 = 16;
 pub const MAP_HEIGHT: u32 = 14;
 // pub const GRAVITY: f32 = 1500.0;
 pub const GRAVITY: f32 = 100.0;
-// pub const GRAVITY: f32 = 0.0;
+
+pub const SLOW_DRAG: f32 = 1. / 1000.;
+pub const FAST_DRAG: f32 = 1. / 5000.;
 
 pub const FRAMES_RECT_PLAYER: [[u32; 4]; 21] = [
     [0, 88, 16, 16],

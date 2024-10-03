@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use crate::{
+    config::{FAST_DRAG, SLOW_DRAG},
     game::{
         animations::player_animation::PlayerAnimation,
         assets::{HandleMap, TextureKey},
@@ -27,15 +30,13 @@ pub struct Idling;
 #[derive(Debug, Default, Component, Reflect, Clone)]
 #[reflect(Component)]
 pub struct Walking {
-    speed: f32,
-    direction: Direction,
+    drag_factor_x: f32,
 }
 
 #[derive(Debug, Default, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct Running {
-    speed: f32,
-    direction: Direction,
+    drag_factor_x: f32,
 }
 
 #[derive(Debug, Default, Clone, Component, Reflect)]
@@ -56,57 +57,78 @@ pub fn spawn_player(
     pos_x: u32,
     pos_y: u32,
 ) {
+    let mut player_command = commands.spawn_empty();
+    let player_entity = Arc::new(player_command.id());
+
+    let is_idling = move |In(entity): In<Entity>, query: Query<&Go>| {
+        let go = query.get(entity).unwrap();
+        if go.distance != 0.0 {
+            None
+        } else {
+            Some(())
+        }
+    };
+
     let is_walking = move |In(entity): In<Entity>, query: Query<&MovementController>| {
         let movement = query.get(entity).unwrap();
-        if movement.is_moving() && !movement.jumping && !movement.running {
-            match movement.moving {
-                ControllerDirection::Idle => return None,
-                ControllerDirection::Left => return Some(Direction::Left),
-                ControllerDirection::Right => return Some(Direction::Right),
-            }
+        if !movement.jumping && !movement.running {
+            Some(())
+        } else {
+            None
         }
-        None
     };
 
     let is_running = move |In(entity): In<Entity>, query: Query<&MovementController>| {
         let movement = query.get(entity).unwrap();
-        if movement.is_moving() && !movement.jumping && movement.running {
-            match movement.moving {
-                ControllerDirection::Idle => return None,
-                ControllerDirection::Left => return Some(Direction::Left),
-                ControllerDirection::Right => return Some(Direction::Right),
-            }
+        if !movement.jumping && movement.running {
+            Some(())
+        } else {
+            None
         }
-        None
     };
 
     let is_jumping = move |In(entity): In<Entity>, query: Query<&MovementController>| {
         let movement = query.get(entity).unwrap();
         if movement.jumping {
-            return Some(true);
+            return Some(());
         }
         None
     };
 
-    let player_state = StateMachine::default()
-        .trans_builder(is_walking, |_: &Idling, direction| {
-            Some(Walking {
-                speed: 1.0,
-                direction,
-            })
-        })
-        .trans_builder(is_running, |_: &Idling, direction| {
-            Some(Running {
-                speed: 2.0,
-                direction,
-            })
-        })
-        .trans_builder(is_jumping, |_: &Idling, _jumping| {
-            Some(Jumping { impulse: 10. })
-        })
-        .trans::<Jumping, _>(done(Some(Done::Success)), Falling);
+    let on_run = {
+        let entity = player_entity.clone();
+        move |world: &mut World| {
+            let running = world.get::<Running>(*entity).unwrap();
+            world.get_mut::<Drag>(*entity).unwrap().0.x = running.drag_factor_x;
+        }
+    };
 
-    commands.spawn((
+    let on_walk = {
+        let entity = player_entity.clone();
+        move |world: &mut World| {
+            let walking = world.get::<Walking>(*entity).unwrap();
+            world.get_mut::<Drag>(*entity).unwrap().0.x = walking.drag_factor_x;
+        }
+    };
+
+    let player_state = StateMachine::default()
+        .trans_builder(is_walking, |_: &AnyState, _| {
+            Some(Walking {
+                drag_factor_x: SLOW_DRAG,
+            })
+        })
+        .trans_builder(is_running, |_: &AnyState, _| {
+            Some(Running {
+                drag_factor_x: FAST_DRAG,
+            })
+        })
+        .trans_builder(is_jumping, |_: &AnyState, _| Some(Jumping { impulse: 10. }))
+        .trans_builder(is_idling, |_: &AnyState, _| Some(Idling))
+        .trans::<Jumping, _>(done(Some(Done::Success)), Falling)
+        .command_on_enter::<Running>(on_run)
+        .command_on_enter::<Walking>(on_walk);
+
+    player_command.insert((
         Name::new(key.to_string().to_string()),
         Player {},
         PlayerAnimation::idling(),
@@ -130,12 +152,11 @@ pub fn spawn_player(
             heading: 0,
             acceleration: 400.,
             deceleration: 300.,
-            drag_factor_x: 1. / 5000.,
             distance: 0.,
         },
         DynamicBoxBundle {
             pos: Pos(Vec2::new(100., 100.)),
-            drag: Drag(Vec2::new(1. / 5000., 0.)),
+            drag: Drag(Vec2::new(FAST_DRAG, 0.)),
             collider: BoxCollider {
                 size: Vec2::new(16., 16.),
             },
@@ -155,3 +176,14 @@ pub fn jump(
         commands.entity(entity).insert(Done::Success);
     }
 }
+
+// impl Command for Running {
+//     fn apply(self, world: &mut World) {
+//         world.entity(entity)
+//         self.speed
+//     }
+// }
+
+// fn foo(world: &mut World) {
+//     world.get(entity)
+// }

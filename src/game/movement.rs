@@ -84,6 +84,7 @@ impl MovementController {
     fn reset(&mut self) {
         self.moving = ControllerDirection::default();
         self.jumping = false;
+        self.running = false;
     }
 
     pub fn is_moving(&self) -> bool {

@@ -12,7 +12,6 @@ pub struct Go {
     pub heading: i32,
     pub acceleration: f32,
     pub deceleration: f32,
-    pub drag_factor_x: f32,
     pub distance: f32,
 }
 
