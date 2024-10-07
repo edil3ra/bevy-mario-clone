@@ -58,6 +58,13 @@ impl Aabb {
         Self { min, max }
     }
 
+    pub fn from_vec_size(point: Vec2, size: Vec2) -> Self {
+        Self {
+            min: Vec2::new(point.x, point.y),
+            max: Vec2::new(point.x + size.x, point.y + size.y),
+        }
+    }
+
     pub fn intersects(&self, other: &Self) -> bool {
         self.max.x >= other.min.x
             && self.max.y >= other.min.y
