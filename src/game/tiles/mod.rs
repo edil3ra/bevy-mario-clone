@@ -10,7 +10,7 @@ use crate::AppSet;
 
 use self::components::{AnimationTile, Behaviour, TileName};
 
-use super::physics::{BoxCollider, PhysicsStep, Pos, PrevPos};
+use super::physics::{Aabb, BoxCollider, PhysicsStep, Pos, PrevPos};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<TileName>();
@@ -21,7 +21,7 @@ pub(super) fn plugin(app: &mut App) {
         FixedUpdate,
         (
             update_animation_tile_timer.in_set(AppSet::TickTimers),
-            (update_animation_time_atlas, entity_collide_with_obstacles)
+            (update_animation_time_atlas, entity_collide_with_tiles)
                 .chain()
                 .in_set(PhysicsStep::PostSolvePositions),
         ),
@@ -45,7 +45,7 @@ fn update_animation_time_atlas(mut query: Query<(&AnimationTile, &mut TileTextur
     }
 }
 
-fn entity_collide_with_obstacles(
+fn entity_collide_with_tiles(
     tilemap_q: Query<(&TilemapSize, &TilemapGridSize, &TileStorage)>,
     mut box_q: Query<(&mut Pos, &PrevPos, &BoxCollider)>,
     blocks_q: Query<&Behaviour>,
@@ -57,12 +57,35 @@ fn entity_collide_with_obstacles(
 
         let tiles_coord =
             get_tile_coords(pos, box_).filter_map(|x| from_world_pos(&x, map_size, grid_size));
-        let tiles_index = tiles_coord.map(|x| tile_storage.get(&x));
-        let mut tiles_behaviour = tiles_index.map(|entity| blocks_q.get(entity.unwrap()).unwrap());
-        let has_entity_collided = tiles_behaviour.any(|behaviour| behaviour.has_collide());
 
-        if has_entity_collided {
-            current_pos.0.x = prev_pos.0.x;
+        for tile_coord in tiles_coord {
+            if let Some(tile_entity) = tile_storage.get(&tile_coord) {
+                let tile_aabb = Aabb::from(tile_coord);
+                let prev_aabb = Aabb::new(
+                    Vec2::new(prev_pos.0.x, prev_pos.0.y),
+                    Vec2::new(prev_pos.0.x + box_.size.x, prev_pos.0.y + box_.size.y),
+                );
+                let current_aabb = Aabb::new(
+                    Vec2::new(pos.x, pos.y),
+                    Vec2::new(pos.x + box_.size.x, pos.y + box_.size.y),
+                );
+
+                let behaviour = blocks_q.get(tile_entity).unwrap();
+
+                if behaviour.is_solid() {
+                    if prev_aabb.right() <= tile_aabb.left()
+                        && current_aabb.right() > tile_aabb.left()
+                    {
+                        current_pos.0.x = tile_aabb.left() - box_.size.x;
+                    }
+
+                    if prev_aabb.left() >= tile_aabb.right()
+                        && current_aabb.left() < tile_aabb.right()
+                    {
+                        current_pos.0.x = tile_aabb.right();
+                    }
+                }
+            }
         }
 
         let mut pos = prev_pos.0;
@@ -70,12 +93,34 @@ fn entity_collide_with_obstacles(
 
         let tiles_coord =
             get_tile_coords(pos, box_).filter_map(|x| from_world_pos(&x, map_size, grid_size));
-        let tiles_index = tiles_coord.map(|x| tile_storage.get(&x));
-        let mut tiles_behaviour = tiles_index.map(|entity| blocks_q.get(entity.unwrap()).unwrap());
-        let has_entity_collided = tiles_behaviour.any(|behaviour| behaviour.has_collide());
 
-        if has_entity_collided {
-            current_pos.0.y = prev_pos.0.y
+        for tile_coord in tiles_coord {
+            if let Some(tile_entity) = tile_storage.get(&tile_coord) {
+                let tile_aabb = Aabb::from(tile_coord);
+                let prev_aabb = Aabb::new(
+                    Vec2::new(prev_pos.0.x, prev_pos.0.y),
+                    Vec2::new(prev_pos.0.x + box_.size.x, prev_pos.0.y + box_.size.y),
+                );
+                let current_aabb = Aabb::new(
+                    Vec2::new(pos.x, pos.y),
+                    Vec2::new(pos.x + box_.size.x, pos.y + box_.size.y),
+                );
+
+                let behaviour = blocks_q.get(tile_entity).unwrap();
+
+                if behaviour.is_solid() {
+                    if prev_aabb.top() <= tile_aabb.bottom()
+                        && current_aabb.top() > tile_aabb.bottom()
+                    {
+                        current_pos.0.y = tile_aabb.bottom() + box_.size.y;
+                    }
+                    if prev_aabb.bottom() >= tile_aabb.top()
+                        && current_aabb.bottom() < tile_aabb.top()
+                    {
+                        current_pos.0.y = tile_aabb.top();
+                    }
+                }
+            }
         }
     }
 }

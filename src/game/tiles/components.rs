@@ -149,7 +149,7 @@ pub enum Behaviour {
 }
 
 impl Behaviour {
-    pub fn has_collide(&self) -> bool {
+    pub fn is_solid(&self) -> bool {
         match self {
             Behaviour::None => false,
             Behaviour::Ground => true,
