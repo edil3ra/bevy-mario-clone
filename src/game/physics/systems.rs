@@ -188,3 +188,9 @@ pub fn draw_box_collider(mut gizmos: Gizmos, query: Query<(&Pos, &BoxCollider)>)
         gizmos.rect_2d(pos.0, Rot2::IDENTITY, box_collider.size, Color::WHITE);
     }
 }
+
+pub fn draw_velocity(mut gizmos: Gizmos, query: Query<(&Pos, &Vel)>) {
+    for (pos, vel) in query.iter() {
+        gizmos.arrow_2d(pos.0, pos.0 + vel.0 * 0.3, Color::srgb(0., 255., 0.));
+    }
+}

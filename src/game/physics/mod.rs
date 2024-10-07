@@ -22,6 +22,7 @@ pub enum PhysicsStep {
     UpdateVelocities,
     SolveVelocities,
     SyncTransform,
+    Debug,
 }
 
 pub(super) fn plugin(app: &mut App) {
@@ -47,6 +48,7 @@ pub(super) fn plugin(app: &mut App) {
             PhysicsStep::UpdateVelocities,
             PhysicsStep::SolveVelocities,
             PhysicsStep::SyncTransform,
+            PhysicsStep::Debug,
         )
             .chain(),
     );
@@ -64,10 +66,7 @@ pub(super) fn plugin(app: &mut App) {
         (collect_collision_pairs).in_set(PhysicsStep::CollectCollisionPairs),
     );
     app.add_systems(FixedUpdate, (integrate).in_set(PhysicsStep::Integrate));
-    app.add_systems(
-        FixedUpdate,
-        (solve_pos, draw_box_collider).in_set(PhysicsStep::SolvePositions),
-    );
+    app.add_systems(FixedUpdate, (solve_pos).in_set(PhysicsStep::SolvePositions));
     app.add_systems(
         FixedUpdate,
         (update_vel).in_set(PhysicsStep::UpdateVelocities),
@@ -79,5 +78,9 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         FixedUpdate,
         (sync_transforms).in_set(PhysicsStep::SyncTransform),
+    );
+    app.add_systems(
+        FixedUpdate,
+        (draw_box_collider, draw_velocity).in_set(PhysicsStep::Debug),
     );
 }
