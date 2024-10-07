@@ -7,7 +7,7 @@ use crate::{
         assets::{HandleMap, TextureKey},
         movement::{ControllerDirection, MovementController},
         physics::{BoxCollider, Drag, DynamicBoxBundle, Pos},
-        traits::go::Go,
+        traits::{go::Go, solid::Obstruct},
     },
     screen::Screen,
 };
@@ -154,6 +154,7 @@ pub fn spawn_player(
             deceleration: 300.,
             distance: 0.,
         },
+        Obstruct(false),
         DynamicBoxBundle {
             pos: Pos(Vec2::new(100., 100.)),
             drag: Drag(Vec2::new(FAST_DRAG, 0.)),

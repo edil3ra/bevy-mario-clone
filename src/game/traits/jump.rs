@@ -16,10 +16,3 @@ pub struct Jump {
     pub speed_boost: f32,
     pub velocity: f32,
 }
-
-pub fn update(
-    time: Res<Time>,
-    mut query: Query<(&mut Go, &MovementController, &Vel, &mut Forces)>,
-) {
-
-}
