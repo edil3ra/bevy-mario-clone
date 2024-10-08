@@ -4,6 +4,8 @@ use crate::{
     game::{
         animations::goomba_animation::GoombaAnimation,
         assets::{HandleMap, TextureKey},
+        physics::{BoxCollider, DynamicBoxBundle, Pos},
+        traits::solid::Obstruct,
     },
     screen::Screen,
 };
@@ -24,16 +26,20 @@ pub fn spawn_goomba(
         GoombaAnimation::walking(),
         SpriteBundle {
             texture: image_handles[&TextureKey::Entities].clone_weak(),
-            transform: Transform {
-                translation: Vec3::new(pos_x as f32, pos_y as f32, 1.),
-                ..Default::default()
-            },
             ..Default::default()
         },
         TextureAtlas {
             layout: atlas_layout_handles.0[&key].clone(),
             index: 0,
         },
+        DynamicBoxBundle {
+            pos: Pos(Vec2::new(pos_x as f32, pos_y as f32)),
+            collider: BoxCollider {
+                size: Vec2::new(16., 16.),
+            },
+            ..Default::default()
+        },
+        Obstruct(false),
         StateScoped(Screen::Playing),
     ));
 }

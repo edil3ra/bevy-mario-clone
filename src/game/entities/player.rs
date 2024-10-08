@@ -5,7 +5,7 @@ use crate::{
     game::{
         animations::player_animation::PlayerAnimation,
         assets::{HandleMap, TextureKey},
-        movement::{ControllerDirection, MovementController},
+        movement::MovementController,
         physics::{BoxCollider, Drag, DynamicBoxBundle, Pos},
         traits::{go::Go, solid::Obstruct},
     },
