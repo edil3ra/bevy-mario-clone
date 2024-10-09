@@ -2,6 +2,29 @@ use bevy::prelude::*;
 
 use std::time::Duration;
 
+#[derive(Debug, Clone)]
+pub struct TileCollision {
+    pub from: Entity,
+    pub to: Entity,
+    pub x_side: Option<XSide>,
+    pub y_side: Option<YSide>,
+}
+use crate::AppSet;
+
+#[derive(Debug, Default, Clone, Copy)]
+pub enum XSide {
+    #[default]
+    Left,
+    Right,
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub enum YSide {
+    #[default]
+    Top,
+    Bottom,
+}
+
 #[derive(Default, Clone, Debug)]
 pub struct Tile {
     pub name: TileName,

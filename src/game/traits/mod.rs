@@ -6,7 +6,7 @@ use bevy::prelude::*;
 
 use self::go::Go;
 
-use super::{physics::PhysicsStep, tiles::update_tile_collisions_resource};
+use super::{physics::PhysicsStep, tiles::systems::update_tile_collisions_resource};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Go>();

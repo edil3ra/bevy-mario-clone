@@ -2,7 +2,10 @@ use bevy::prelude::*;
 
 use crate::game::{
     physics::Vel,
-    tiles::{components::Behaviour, TileCollisions, YSide},
+    tiles::{
+        components::{Behaviour, YSide},
+        resources::TileCollisions,
+    },
 };
 
 #[derive(Debug, Default, Component, Reflect)]

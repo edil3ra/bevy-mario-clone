@@ -3,7 +3,10 @@ use bevy_ecs_tilemap::tiles::TilePos;
 
 use crate::game::{
     physics::{Aabb, BoxCollider, Pos},
-    tiles::{components::Behaviour, TileCollisions, XSide, YSide},
+    tiles::{
+        components::{Behaviour, XSide, YSide},
+        resources::TileCollisions,
+    },
 };
 
 #[derive(Debug, Default, Component, Reflect)]
