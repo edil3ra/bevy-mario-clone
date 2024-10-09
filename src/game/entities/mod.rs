@@ -7,13 +7,9 @@ use crate::{
     config::{FRAMES_RECT_GOOMBA_BROWN, FRAMES_RECT_PLAYER, MAP_HEIGHT, TILE_SIZE},
     game::assets::{HandleMap, TextureKey},
     screen::Screen,
-    AppSet,
 };
 
-use self::{
-    goomba::spawn_goomba,
-    player::{jump, spawn_player},
-};
+use self::{goomba::spawn_goomba, player::spawn_player};
 
 use super::{
     assets::{LevelAsset, LevelKey},
@@ -22,7 +18,6 @@ use super::{
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::Loading), setup_entities);
-    app.add_systems(Update, (jump).in_set(AppSet::Update));
     app.observe(spawn_entities);
 }
 
@@ -31,10 +26,6 @@ pub struct TextureAtlasLayoutEntities(HashMap<EntityKey, Handle<TextureAtlasLayo
 
 #[derive(Event, Debug)]
 pub struct SpawnEntities;
-
-#[derive(Component, Debug, Clone, PartialEq, Eq, Default, Reflect)]
-#[reflect(Component)]
-pub struct Player {}
 
 #[derive(Component, Debug, Clone, PartialEq, Eq, Default, Reflect)]
 #[reflect(Component)]

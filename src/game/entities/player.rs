@@ -7,14 +7,18 @@ use crate::{
         assets::{HandleMap, TextureKey},
         movement::MovementController,
         physics::{BoxCollider, Drag, DynamicBoxBundle, Pos},
-        traits::{go::Go, solid::Obstruct},
+        traits::{go::Go, jump::Jump, solid::Obstruct},
     },
     screen::Screen,
 };
 use bevy::prelude::*;
 use seldom_state::prelude::*;
 
-use super::{EntityKey, Player, TextureAtlasLayoutEntities};
+use super::{EntityKey, TextureAtlasLayoutEntities};
+
+#[derive(Component, Debug, Clone, PartialEq, Eq, Default, Reflect)]
+#[reflect(Component)]
+pub struct Player;
 
 #[derive(Debug, Default, Clone, Reflect)]
 enum Direction {
@@ -41,9 +45,7 @@ pub struct Running {
 
 #[derive(Debug, Default, Clone, Component, Reflect)]
 #[reflect(Component)]
-pub struct Jumping {
-    impulse: f32,
-}
+pub struct Jumping;
 
 #[derive(Debug, Default, Clone, Component, Reflect)]
 #[reflect(Component)]
@@ -87,9 +89,9 @@ pub fn spawn_player(
         }
     };
 
-    let is_jumping = move |In(entity): In<Entity>, query: Query<&MovementController>| {
-        let movement = query.get(entity).unwrap();
-        if movement.jumping {
+    let is_jumping = move |In(entity): In<Entity>, query: Query<(&MovementController, &Jump)>| {
+        let (movement, jump) = query.get(entity).unwrap();
+        if movement.jumping && !jump.is_falling() {
             return Some(());
         }
         None
@@ -111,6 +113,14 @@ pub fn spawn_player(
         }
     };
 
+    let on_jump = {
+        let entity = player_entity.clone();
+        move |world: &mut World| {
+            let mut jump = world.get_mut::<Jump>(*entity).unwrap();
+            jump.start();
+        }
+    };
+
     let player_state = StateMachine::default()
         .trans_builder(is_walking, |_: &AnyState, _| {
             Some(Walking {
@@ -122,15 +132,16 @@ pub fn spawn_player(
                 drag_factor_x: FAST_DRAG,
             })
         })
-        .trans_builder(is_jumping, |_: &AnyState, _| Some(Jumping { impulse: 10. }))
+        .trans_builder(is_jumping, |_: &AnyState, _| Some(Jumping))
         .trans_builder(is_idling, |_: &AnyState, _| Some(Idling))
         .trans::<Jumping, _>(done(Some(Done::Success)), Falling)
         .command_on_enter::<Running>(on_run)
-        .command_on_enter::<Walking>(on_walk);
+        .command_on_enter::<Walking>(on_walk)
+        .command_on_enter::<Jumping>(on_jump);
 
     player_command.insert((
         Name::new(key.to_string().to_string()),
-        Player {},
+        Player,
         PlayerAnimation::idling(),
         SpriteBundle {
             texture: image_handles[&TextureKey::Entities].clone_weak(),
@@ -148,13 +159,18 @@ pub fn spawn_player(
         Idling,
         player_state,
         Go {
-            direction: 0,
-            heading: 0,
             acceleration: 400.,
             deceleration: 300.,
-            distance: 0.,
+            ..Default::default()
         },
         Obstruct(false),
+        Jump {
+            duration: 0.3,
+            grace_period: 0.1,
+            speed_boost: 0.3,
+            velocity: 200.,
+            ..Default::default()
+        },
         DynamicBoxBundle {
             pos: Pos(Vec2::new(100., 100.)),
             drag: Drag(Vec2::new(FAST_DRAG, 0.)),
@@ -166,25 +182,3 @@ pub fn spawn_player(
         StateScoped(Screen::Playing),
     ));
 }
-
-pub fn jump(
-    mut commands: Commands,
-    mut query: Query<(Entity, &mut Transform, &Jumping), Added<Jumping>>,
-) {
-    for (entity, mut transform, jumping) in &mut query {
-        let impulse = jumping.impulse;
-        // todo: todo change velocity of mario to make it jump
-        commands.entity(entity).insert(Done::Success);
-    }
-}
-
-// impl Command for Running {
-//     fn apply(self, world: &mut World) {
-//         world.entity(entity)
-//         self.speed
-//     }
-// }
-
-// fn foo(world: &mut World) {
-//     world.get(entity)
-// }

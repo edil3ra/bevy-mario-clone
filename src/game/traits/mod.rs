@@ -10,10 +10,12 @@ use super::{physics::PhysicsStep, tiles::update_tile_collisions_resource};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Go>();
-    app.add_systems(FixedUpdate, go::update.in_set(PhysicsStep::PreIntegrate));
+    app.add_systems(FixedPostUpdate, ((go::update, jump::update),).chain());
+
     app.add_systems(
         FixedUpdate,
-        solid::obstruct
+        ((solid::obstruct, jump::obstruct),)
+            .chain()
             .in_set(PhysicsStep::PostSolvePositions)
             .after(update_tile_collisions_resource),
     );

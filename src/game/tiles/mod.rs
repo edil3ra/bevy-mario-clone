@@ -92,7 +92,7 @@ pub fn update_tile_collisions_resource(
                 if let Some(tile_entity) = tile_storage.get(&tile_coord) {
                     let tile_aabb = Aabb::from(tile_coord);
                     let prev_aabb = Aabb::from_vec_size(prev_pos.0, box_.size);
-                    let current_aabb = Aabb::from_vec_size(current_pos.0, box_.size);
+                    let current_aabb = Aabb::from_vec_size(pos, box_.size);
                     if prev_aabb.right() <= tile_aabb.left()
                         && current_aabb.right() > tile_aabb.left()
                     {
@@ -120,7 +120,7 @@ pub fn update_tile_collisions_resource(
                 if let Some(tile_entity) = tile_storage.get(&tile_coord) {
                     let tile_aabb = Aabb::from(tile_coord);
                     let prev_aabb = Aabb::from_vec_size(prev_pos.0, box_.size);
-                    let current_aabb = Aabb::from_vec_size(current_pos.0, box_.size);
+                    let current_aabb = Aabb::from_vec_size(pos, box_.size);
                     if prev_aabb.top() <= tile_aabb.bottom()
                         && current_aabb.top() > tile_aabb.bottom()
                     {
@@ -161,9 +161,45 @@ fn get_tile_corner_coords(current_pos: Vec2, box_: &BoxCollider) -> std::array::
     let left_up = Vec2::new(current_pos.x, current_pos.y + box_.size.y);
     let right_up = Vec2::new(current_pos.x + box_.size.x, current_pos.y + box_.size.y);
     let left_down = Vec2::new(current_pos.x, current_pos.y);
-    let right_down = Vec2::new(current_pos.x + box_.size.x / 2., current_pos.y);
+    let right_down = Vec2::new(current_pos.x + box_.size.x, current_pos.y);
 
     [left_up, right_up, left_down, right_down].into_iter()
+}
+
+fn get_tile_x_side_coords(
+    prev_pos: Vec2,
+    current_pos: Vec2,
+    box_: &BoxCollider,
+) -> Option<[Vec2; 2]> {
+    if prev_pos.x > current_pos.x {
+        let left_up = Vec2::new(current_pos.x, current_pos.y + box_.size.y);
+        let left_down = Vec2::new(current_pos.x, current_pos.y);
+        Some([left_up, left_down])
+    } else if prev_pos.x < current_pos.x {
+        let right_up = Vec2::new(current_pos.x + box_.size.x, current_pos.y + box_.size.y);
+        let right_down = Vec2::new(current_pos.x + box_.size.x, current_pos.y);
+        Some([right_up, right_down])
+    } else {
+        None
+    }
+}
+
+fn get_tile_y_side_coords(
+    prev_pos: Vec2,
+    current_pos: Vec2,
+    box_: &BoxCollider,
+) -> Option<[Vec2; 2]> {
+    if prev_pos.y > current_pos.y {
+        let left_down = Vec2::new(current_pos.x, current_pos.y);
+        let right_down = Vec2::new(current_pos.x + box_.size.x, current_pos.y);
+        Some([left_down, right_down])
+    } else if prev_pos.y < current_pos.y {
+        let left_up = Vec2::new(current_pos.x, current_pos.y + box_.size.y);
+        let right_up = Vec2::new(current_pos.x + box_.size.x, current_pos.y + box_.size.y);
+        Some([left_up, right_up])
+    } else {
+        None
+    }
 }
 
 pub fn from_world_pos(

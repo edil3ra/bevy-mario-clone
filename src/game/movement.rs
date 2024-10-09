@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::AppSet;
 
-use super::entities::Player;
+use super::entities::player::Player;
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<MovementController>();

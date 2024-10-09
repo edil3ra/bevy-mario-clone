@@ -25,7 +25,7 @@ pub fn obstruct(
                 if let Some(x_side) = tile_collision.x_side {
                     match x_side {
                         XSide::Left => {
-                            pos.0.x = tile_aabb.left() - box_.size.x;
+                            pos.0.x = tile_aabb.left() - box_.size.x - 0.001;
                         }
                         XSide::Right => {
                             pos.0.x = tile_aabb.right();
@@ -38,7 +38,7 @@ pub fn obstruct(
                             pos.0.y = tile_aabb.top();
                         }
                         YSide::Bottom => {
-                            pos.0.y = tile_aabb.bottom() + box_.size.y;
+                            pos.0.y = tile_aabb.bottom() - box_.size.y - 0.001;
                         }
                     }
                 }

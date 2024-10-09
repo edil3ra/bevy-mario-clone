@@ -77,7 +77,7 @@ pub fn integrate(
         forces.0.clear();
 
         // new velocity based on forces
-        let new_velocity = vel.0 += DT * forces_sum / mass.0;
+        vel.0 += DT * forces_sum / mass.0;
 
         // add drag factor
         {
