@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::AppSet;
+use crate::{dev_tools::custom::DebugMode, AppSet};
 
 use super::entities::player::Player;
 
@@ -11,7 +11,13 @@ pub(super) fn plugin(app: &mut App) {
         record_movement_controller.in_set(AppSet::RecordInput),
     );
 
-    app.add_systems(Update, camera_follow_player.in_set(AppSet::Update));
+    app.add_systems(
+        Update,
+        camera_follow_player
+            .run_if(resource_exists::<DebugMode>.and_then(resource_equals(DebugMode(false)))),
+    );
+
+    // my_system.run_if(resource_exists::<R>.and_then(resource_equals(R(0)))),
 }
 
 #[derive(Reflect, Debug, Clone)]

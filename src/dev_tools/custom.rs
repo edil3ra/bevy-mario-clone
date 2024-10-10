@@ -1,11 +1,25 @@
 use bevy::prelude::*;
 
+use crate::game::physics::DT;
 use crate::game::SettingsState;
 use crate::AppSet;
 
+#[derive(Debug, Default, PartialEq, Resource)]
+pub struct DebugMode(pub bool);
+
 pub(super) fn plugin(app: &mut App) {
-    app.add_systems(Update, toggle_fullscreen.in_set(AppSet::RecordInput))
-        .add_systems(Update, move_camera.in_set(AppSet::Update));
+    app.init_resource::<DebugMode>();
+
+    app.add_systems(
+        Update,
+        (toggle_fullscreen, toogle_debug).in_set(AppSet::RecordInput),
+    );
+
+    app.add_systems(
+        Update,
+        move_camera
+            .run_if(resource_exists::<DebugMode>.and_then(resource_equals(DebugMode(true)))),
+    );
 }
 
 fn toggle_fullscreen(
@@ -20,14 +34,27 @@ fn toggle_fullscreen(
     }
 }
 
+fn toogle_debug(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut time: ResMut<Time<Virtual>>,
+    mut debug_mode: ResMut<DebugMode>,
+) {
+    if keyboard_input.just_pressed(KeyCode::KeyR) {
+        debug_mode.0 = !debug_mode.0;
+        if time.is_paused() {
+            time.unpause();
+        } else {
+            time.pause();
+        }
+    }
+}
+
 fn move_camera(
-    time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<(&mut Transform, &mut OrthographicProjection), With<Camera>>,
 ) {
     for (mut transform, mut ortho) in query.iter_mut() {
         let mut direction = Vec3::ZERO;
-
         if keyboard_input.pressed(KeyCode::KeyJ) {
             direction -= Vec3::new(1.0, 0.0, 0.0);
         }
@@ -57,7 +84,7 @@ fn move_camera(
         }
 
         let z = transform.translation.z;
-        transform.translation += time.delta_seconds() * direction * 500.;
+        transform.translation += direction * 500. * DT ;
         transform.translation.z = z;
     }
 }
