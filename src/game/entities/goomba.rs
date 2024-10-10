@@ -19,27 +19,29 @@ pub fn spawn_goomba(
     key: EntityKey,
     pos_x: u32,
     pos_y: u32,
-) {
-    commands.spawn((
-        Name::new(key.to_string().to_string()),
-        Mob {},
-        GoombaAnimation::walking(),
-        SpriteBundle {
-            texture: image_handles[&TextureKey::Entities].clone_weak(),
-            ..Default::default()
-        },
-        TextureAtlas {
-            layout: atlas_layout_handles.0[&key].clone(),
-            index: 0,
-        },
-        DynamicBoxBundle {
-            pos: Pos(Vec2::new(pos_x as f32, pos_y as f32)),
-            collider: BoxCollider {
-                size: Vec2::new(16., 16.),
+) -> Entity {
+    commands
+        .spawn((
+            Name::new(key.to_string().to_string()),
+            Mob {},
+            GoombaAnimation::walking(),
+            SpriteBundle {
+                texture: image_handles[&TextureKey::Entities].clone_weak(),
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        Obstruct(false),
-        StateScoped(Screen::Playing),
-    ));
+            TextureAtlas {
+                layout: atlas_layout_handles.0[&key].clone(),
+                index: 0,
+            },
+            DynamicBoxBundle {
+                pos: Pos(Vec2::new(pos_x as f32, pos_y as f32)),
+                collider: BoxCollider {
+                    size: Vec2::new(16., 16.),
+                },
+                ..Default::default()
+            },
+            Obstruct(false),
+            StateScoped(Screen::Playing),
+        ))
+        .id()
 }

@@ -17,8 +17,7 @@ pub(super) fn plugin(app: &mut App) {
 
     app.add_systems(
         Update,
-        move_camera
-            .run_if(resource_exists::<DebugMode>.and_then(resource_equals(DebugMode(true)))),
+        move_camera.run_if(resource_exists::<DebugMode>.and_then(resource_equals(DebugMode(true)))),
     );
 }
 
@@ -84,7 +83,7 @@ fn move_camera(
         }
 
         let z = transform.translation.z;
-        transform.translation += direction * 500. * DT ;
+        transform.translation += direction * 500. * DT;
         transform.translation.z = z;
     }
 }

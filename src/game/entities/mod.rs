@@ -117,24 +117,35 @@ fn spawn_entities(
         30,
     );
 
-    for entity_template in level.entities.iter().map(|entity| {
-        SpawnEntityTemplate::new(
-            EntityKey::from(entity.name.as_ref()),
-            entity.pos[0],
-            entity.pos[1],
-        )
-    }) {
-        let SpawnEntityTemplate { key, x, y } = entity_template;
-        match key {
+    let enemies = level
+        .entities
+        .iter()
+        .map(|entity_asset| {
+            SpawnEntityTemplate::new(
+                EntityKey::from(entity_asset.name.as_ref()),
+                entity_asset.pos[0],
+                entity_asset.pos[1],
+            )
+        })
+        .map(|template| match template.key {
             EntityKey::GoombaBrown => spawn_goomba(
                 &mut commands,
                 &image_handles,
                 &atlas_layout_handles,
-                key,
-                x,
-                (MAP_HEIGHT * TILE_SIZE) - y,
+                template.key,
+                template.x,
+                (MAP_HEIGHT * TILE_SIZE) - template.y,
             ),
-            _ => {}
-        }
-    }
+            _ => commands.spawn_empty().id(),
+        })
+        .collect::<Vec<_>>();
+    commands
+        .spawn_empty()
+        .insert((
+            SpatialBundle {
+                ..Default::default()
+            },
+            Name::new("enemies"),
+        ))
+        .push_children(&enemies);
 }
