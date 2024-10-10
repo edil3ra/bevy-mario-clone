@@ -5,12 +5,11 @@ use crate::{
         animations::goomba_animation::GoombaAnimation,
         assets::{HandleMap, TextureKey},
         physics::{BoxCollider, DynamicBoxBundle, Pos},
+        spawn::entities::{EntityKey, Mob, TextureAtlasLayoutEntities},
         traits::solid::Obstruct,
     },
     screen::Screen,
 };
-
-use super::{EntityKey, Mob, TextureAtlasLayoutEntities};
 
 pub fn spawn_goomba(
     commands: &mut Commands,

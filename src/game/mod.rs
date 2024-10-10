@@ -32,7 +32,6 @@ pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
         animations::plugin,
         assets::plugin,
-        entities::plugin,
         movement::plugin,
         physics::plugin,
         spawn::plugin,

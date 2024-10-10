@@ -32,8 +32,6 @@ pub(super) fn plugin(app: &mut App) {
     )
     .add_systems(PostUpdate, set_camera_viewport.after(show_ui_system))
     .add_systems(Update, set_gizmo_mode)
-    // .add_systems(Update, auto_add_raycast_target)
-    // .add_systems(Update, handle_pick_events)
     .register_type::<Option<Handle<Image>>>()
     .register_type::<AlphaMode>();
 }

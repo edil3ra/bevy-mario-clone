@@ -42,20 +42,27 @@ fn spawn_map(
     let texture_handle: Handle<Image> = textures_handles[&TextureKey::Tiles].clone_weak();
     let map_size = TilemapSize { x: 212, y: 15 };
     let mut tile_storage = TileStorage::empty(map_size);
-    let tilemap_entity = commands.spawn_empty().id();
+    let tilemap_entity = commands.spawn(Name::new("TileMap")).id();
+    let map_entity = commands
+        .spawn((
+            Name::new("Map"),
+            SpatialBundle {
+                ..Default::default()
+            },
+        ))
+        .id();
 
     let level = levels
         .get(level_handles[&gs.current_level].clone_weak().id())
         .unwrap();
 
     for (index, layer) in level.layers.iter().enumerate() {
-        let map_entity = commands
-            .spawn_empty()
-            .insert((
+        let layer_entity = commands
+            .spawn((
+                Name::new(format!("Layer-{}", index + 1)),
                 SpatialBundle {
                     ..Default::default()
                 },
-                Name::new(format!("layer-{}", index)),
             ))
             .id();
 
@@ -71,10 +78,14 @@ fn spawn_map(
             &layer.tiles,
             patterns,
             tilemap_entity,
-            map_entity,
+            layer_entity,
             &mut tile_storage,
             None,
         );
+        commands
+            .get_entity(map_entity)
+            .unwrap()
+            .add_child(layer_entity);
     }
 
     let tile_size = TilemapTileSize {
@@ -100,7 +111,7 @@ fn create_tiles(
     tiles: &[LevelTileAsset],
     patterns: &HashMap<String, PatternTilesAsset>,
     tilemap_entity: Entity,
-    map_entity: Entity,
+    layer_entity: Entity,
     tile_storage: &mut TileStorage,
     previous_position: Option<TilePos>,
 ) {
@@ -157,7 +168,7 @@ fn create_tiles(
                     tile,
                     current_position,
                     tilemap_entity,
-                    map_entity,
+                    layer_entity,
                     tile_storage,
                 );
             }
@@ -169,7 +180,7 @@ fn create_tiles(
                     &pattern.tiles,
                     patterns,
                     tilemap_entity,
-                    map_entity,
+                    layer_entity,
                     tile_storage,
                     Some(current_position),
                 )
@@ -183,7 +194,7 @@ pub fn create_tile(
     tile: &LevelTileAsset,
     tile_pos: TilePos,
     tilemap_entity: Entity,
-    map_entity: Entity,
+    layer_entity: Entity,
     tile_storage: &mut TileStorage,
 ) {
     let tile = Tile::from(tile.style.as_ref().unwrap().as_ref());
@@ -224,6 +235,6 @@ pub fn create_tile(
         });
     }
 
-    commands.entity(map_entity).add_child(tile_entity);
+    commands.entity(layer_entity).add_child(tile_entity);
     tile_storage.set(&tile_pos, tile_entity);
 }

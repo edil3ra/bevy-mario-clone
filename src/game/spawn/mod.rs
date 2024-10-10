@@ -4,9 +4,10 @@
 
 use bevy::prelude::*;
 
+pub mod entities;
 pub mod level;
 pub mod map;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins((level::plugin, map::plugin));
+    app.add_plugins((level::plugin, map::plugin, entities::plugin));
 }

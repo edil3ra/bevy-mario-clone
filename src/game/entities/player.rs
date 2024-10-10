@@ -7,14 +7,13 @@ use crate::{
         assets::{HandleMap, TextureKey},
         movement::MovementController,
         physics::{BoxCollider, Drag, DynamicBoxBundle, Pos},
+        spawn::entities::{EntityKey, TextureAtlasLayoutEntities},
         traits::{go::Go, jump::Jump, solid::Obstruct},
     },
     screen::Screen,
 };
 use bevy::prelude::*;
 use seldom_state::prelude::*;
-
-use super::{EntityKey, TextureAtlasLayoutEntities};
 
 #[derive(Component, Debug, Clone, PartialEq, Eq, Default, Reflect)]
 #[reflect(Component)]

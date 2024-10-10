@@ -1,16 +1,16 @@
 use bevy::prelude::*;
 
-// use crate::dev_tools::SpawnTileLabelsDebug;
-
-use crate::game::entities::SpawnEntities;
-
-use super::map::SpawnMap;
+use super::{
+    entities::{spawn_entities, SpawnEntities},
+    map::SpawnMap,
+};
 
 pub(super) fn plugin(app: &mut App) {
     app.observe(spawn_level);
+    app.observe(spawn_entities);
 }
 
-#[derive(Event, Debug)]
+#[derive(Event, Debug, Default)]
 pub struct SpawnLevel;
 
 fn spawn_level(_trigger: Trigger<SpawnLevel>, mut commands: Commands) {
